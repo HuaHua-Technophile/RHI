@@ -195,27 +195,77 @@ public partial class DetailPanelBuilder
             {
                 case NrMethodDlss5Tool:
                     Tag(d5i ? "✓ DLSS5 Tool" : "✗ DLSS5 Tool", d5i);
-                    Tag(nri ? $"✓ NR DLL {nrv}" : "✗ NR DLL", nri);
+                {
+                    var det = card.DlssDetection;
+                    var srPath2 = det?.DlssPath  ?? Path.Combine(installPath, "nvngx_dlss.dll");
+                    var rrPath2 = det?.DlssdPath ?? Path.Combine(installPath, "nvngx_dlssd.dll");
+                    var fgPath2 = det?.DlssgPath ?? Path.Combine(installPath, "nvngx_dlssg.dll");
+                    var nrPath3 = det?.DlssnrPath ?? Path.Combine(installPath, "nvngx_dlssnr.dll");
+                    bool srOk2 = File.Exists(srPath2); bool rrOk2 = File.Exists(rrPath2);
+                    bool fgOk2 = File.Exists(fgPath2); bool nrOk3 = File.Exists(nrPath3);
+                    if (card.HasDlss)
+                    {
+                        Tag(srOk2 ? $"✓ DLSS SR {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(srPath2))}" : "✗ DLSS SR", srOk2);
+                        Tag(rrOk2 ? $"✓ DLSS RR {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(rrPath2))}" : "✗ DLSS RR", rrOk2);
+                        Tag(fgOk2 ? $"✓ DLSS FG {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(fgPath2))}" : "✗ DLSS FG", fgOk2);
+                    }
+                    Tag(nrOk3 ? $"✓ NR DLL {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(nrPath3))}" : "✗ NR DLL", nrOk3);
+                }
                     break;
                 case NrMethodDlss5ToolBridge:
                     Tag(d5i ? "✓ DLSS5 Tool" : "✗ DLSS5 Tool", d5i);
                     Tag(bri ? "✓ DX11 Bridge" : "✗ DX11 Bridge", bri);
-                    Tag(nri ? $"✓ NR DLL {nrv}" : "✗ NR DLL", nri);
+                {
+                    var det = card.DlssDetection;
+                    var srPath3 = det?.DlssPath  ?? Path.Combine(installPath, "nvngx_dlss.dll");
+                    var rrPath3 = det?.DlssdPath ?? Path.Combine(installPath, "nvngx_dlssd.dll");
+                    var fgPath3 = det?.DlssgPath ?? Path.Combine(installPath, "nvngx_dlssg.dll");
+                    var nrPath4 = det?.DlssnrPath ?? Path.Combine(installPath, "nvngx_dlssnr.dll");
+                    bool srOk3 = File.Exists(srPath3); bool rrOk3 = File.Exists(rrPath3);
+                    bool fgOk3 = File.Exists(fgPath3); bool nrOk4 = File.Exists(nrPath4);
+                    if (card.HasDlss)
+                    {
+                        Tag(srOk3 ? $"✓ DLSS SR {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(srPath3))}" : "✗ DLSS SR", srOk3);
+                        Tag(rrOk3 ? $"✓ DLSS RR {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(rrPath3))}" : "✗ DLSS RR", rrOk3);
+                        Tag(fgOk3 ? $"✓ DLSS FG {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(fgPath3))}" : "✗ DLSS FG", fgOk3);
+                    }
+                    Tag(nrOk4 ? $"✓ NR DLL {DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(nrPath4))}" : "✗ NR DLL", nrOk4);
+                }
                     break;
                 case NrMethodShortFuse:
                     Tag(sfi    ? "✓ DLSS Tool (ShortFuse)"  : "✗ DLSS Tool (ShortFuse)", sfi);
-                    Tag(dlssi  ? $"✓ DLSS SR {dlssv}"       : "✗ DLSS SR",   dlssi);
-                    Tag(dlssdi ? $"✓ DLSS RR {dlssdv}"      : "✗ DLSS RR",   dlssdi);
-                    Tag(dlssgi ? $"✓ DLSS FG {dlssgv}"      : "✗ DLSS FG",   dlssgi);
-                    Tag(nri    ? $"✓ NR DLL {nrv}"          : "✗ NR DLL",    nri);
+                {
+                    // Use detected DLL paths — ShortFuse deploys to wherever DLSS lives (deep plugin folders on UE games)
+                    var det    = card.DlssDetection;
+                    var srPath = det?.DlssPath  ?? Path.Combine(installPath, "nvngx_dlss.dll");
+                    var rrPath = det?.DlssdPath ?? Path.Combine(installPath, "nvngx_dlssd.dll");
+                    var fgPath = det?.DlssgPath ?? Path.Combine(installPath, "nvngx_dlssg.dll");
+                    var nrSfPath = det?.DlssnrPath ?? Path.Combine(installPath, "nvngx_dlssnr.dll");
+                    bool srOk = File.Exists(srPath);
+                    bool rrOk = File.Exists(rrPath);
+                    bool fgOk = File.Exists(fgPath);
+                    bool nrSfOk = File.Exists(nrSfPath);
+                    string? srv   = srOk   ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(srPath))   : null;
+                    string? rrvSf = rrOk   ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(rrPath))   : null;
+                    string? fgvSf = fgOk   ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(fgPath))   : null;
+                    string? nrvSf = nrSfOk ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(nrSfPath)) : null;
+                    Tag(srOk   ? $"✓ DLSS SR {srv}"   : "✗ DLSS SR",  srOk);
+                    Tag(rrOk   ? $"✓ DLSS RR {rrvSf}" : "✗ DLSS RR", rrOk);
+                    Tag(fgOk   ? $"✓ DLSS FG {fgvSf}" : "✗ DLSS FG", fgOk);
+                    Tag(nrSfOk ? $"✓ NR DLL {nrvSf}"  : "✗ NR DLL",  nrSfOk);
+                }
                     break;
                 case NrMethodFeeder:
                     Tag(fei   ? "✓ Feeder Addon"            : "✗ Feeder Addon",  fei);
                     Tag(d5i   ? "✓ DLSS5 Tool"              : "✗ DLSS5 Tool",    d5i);
                     Tag(dlssi ? $"✓ DLSS SR {dlssv}"        : "✗ DLSS SR",       dlssi);
                     Tag(nri   ? $"✓ NR DLL {nrv}"           : "✗ NR DLL",        nri);
-                    Tag(_shaderPackService.IsPackCached("DLSS5Feeder") ? "✓ Feed.fx"   : "✗ Feed.fx",   _shaderPackService.IsPackCached("DLSS5Feeder"));
-                    Tag(_shaderPackService.IsPackCached("LumeniteFX")  ? "✓ LumeniteFX" : "✗ LumeniteFX", _shaderPackService.IsPackCached("LumeniteFX"));
+                    var shadersDir = Path.Combine(installPath, ShaderPackService.GameReShadeShaders, "Shaders");
+                    bool feedFxPresent = File.Exists(Path.Combine(shadersDir, "DLSS5_Feed.fx"));
+                    bool lumeniteFxPresent = Directory.Exists(shadersDir) &&
+                        Directory.GetFiles(shadersDir, "lumenite_*.fx", SearchOption.TopDirectoryOnly).Length > 0;
+                    Tag(feedFxPresent    ? "✓ Feed.fx"    : "✗ Feed.fx",    feedFxPresent);
+                    Tag(lumeniteFxPresent ? "✓ LumeniteFX" : "✗ LumeniteFX", lumeniteFxPresent);
                     break;
                 default:
                     Tag("Not installed", false);
@@ -436,6 +486,12 @@ public partial class DetailPanelBuilder
                     removeBtn.IsEnabled  = true;
                     UpdateInstallBtnAppearance();
                     RefreshStatus();
+                    // Rebuild the full overrides panel so shader mode combo + NR section both refresh
+                    var targetCard = _window.ViewModel.AllCards.FirstOrDefault(c =>
+                        c.GameName.Equals(gameName, StringComparison.OrdinalIgnoreCase) &&
+                        (string.IsNullOrEmpty(store) || c.Source == store));
+                    if (targetCard != null)
+                        BuildOverridesPanel(targetCard);
                 });
             }
         };
@@ -474,8 +530,71 @@ public partial class DetailPanelBuilder
                         {
                             var file = card.Is32Bit ? FeederDeployFile32 : FeederDeployFile64;
                             RemoveAddonFile(installPath, file, "NeuralRendering.Remove.Feeder");
-                            // Also remove the NR dll if RHI placed it
+
+                            // Remove DLSS5 Tool neural consumer
+                            rdx5Svc.Uninstall(installPath);
+
+                            // Remove nvngx_dlss.dll if we placed it (sentinel)
+                            var dlssDest = Path.Combine(installPath, "nvngx_dlss.dll");
+                            var dlssSentinel = dlssDest + ".original";
+                            if (File.Exists(dlssSentinel))
+                            {
+                                var info = new FileInfo(dlssSentinel);
+                                if (info.Length == 0) { try { File.Delete(dlssDest); File.Delete(dlssSentinel); } catch { } }
+                                else { try { File.Copy(dlssSentinel, dlssDest, overwrite: true); File.Delete(dlssSentinel); } catch { } }
+                            }
+
+                            // Remove NR dll
                             rdx5Svc.RemoveNrDll(installPath);
+
+                            // Remove only DLSS5Feeder + LumeniteFX shader files — never wipe the whole folder
+                            try
+                            {
+                                var gameKey = Models.GameKey.FromCard(gameName, store).ToKey();
+                                var shadersDir  = Path.Combine(installPath, ShaderPackService.GameReShadeShaders, "Shaders");
+                                var texturesDir = Path.Combine(installPath, ShaderPackService.GameReShadeShaders, "Textures");
+                                var packsToRemove = new[] { "DLSS5Feeder", "LumeniteFX" };
+
+                                // Delete specific pack files from the game's shader folder
+                                foreach (var packId in packsToRemove)
+                                {
+                                    var files = _shaderPackService.GetPackShaderFiles(new[] { packId });
+                                    foreach (var f in files)
+                                    {
+                                        var fxPath = Path.Combine(shadersDir, f);
+                                        try { if (File.Exists(fxPath)) File.Delete(fxPath); } catch { }
+                                    }
+                                }
+                                // Also remove lumenite texture
+                                if (Directory.Exists(texturesDir))
+                                {
+                                    foreach (var f in Directory.GetFiles(texturesDir, "lumenite_*"))
+                                        try { File.Delete(f); } catch { }
+                                }
+                                // Also remove DLSS5_Feed.fx and DLSS5Feeder subfolder files directly
+                                try { if (File.Exists(Path.Combine(shadersDir, "DLSS5_Feed.fx"))) File.Delete(Path.Combine(shadersDir, "DLSS5_Feed.fx")); } catch { }
+
+                                // Update persisted selection — remove our packs, keep others
+                                var current = _gameNameService.PerGameShaderSelection.TryGetValue(gameKey, out var sel)
+                                    ? sel.ToList() : new List<string>();
+                                var remaining = current
+                                    .Where(p => !p.Equals("DLSS5Feeder", StringComparison.OrdinalIgnoreCase)
+                                             && !p.Equals("LumeniteFX", StringComparison.OrdinalIgnoreCase))
+                                    .ToList();
+                                if (remaining.Count > 0)
+                                    _gameNameService.PerGameShaderSelection[gameKey] = remaining;
+                                else
+                                {
+                                    _gameNameService.PerGameShaderSelection.Remove(gameKey);
+                                    _window.DispatcherQueue?.TryEnqueue(() =>
+                                    {
+                                        _window.ViewModel.SetPerGameShaderMode(gameName, "Global", store);
+                                        card.ShaderModeOverride = null;
+                                    });
+                                }
+                                _window.DispatcherQueue?.TryEnqueue(() => _window.ViewModel.SaveSettingsPublic());
+                            }
+                            catch { }
                             break;
                         }
                     }
@@ -495,6 +614,12 @@ public partial class DetailPanelBuilder
                     installBtn.IsEnabled = true;
                     UpdateInstallBtnAppearance();
                     RefreshStatus();
+                    // Rebuild full overrides panel so shader mode combo reflects new state
+                    var targetCard = _window.ViewModel.AllCards.FirstOrDefault(c =>
+                        c.GameName.Equals(gameName, StringComparison.OrdinalIgnoreCase) &&
+                        (string.IsNullOrEmpty(store) || c.Source == store));
+                    if (targetCard != null)
+                        BuildOverridesPanel(targetCard);
                 });
             }
         };
@@ -507,24 +632,18 @@ public partial class DetailPanelBuilder
 
         // ── How to use links ──────────────────────────────────────────────────
         var linksRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 4, 0, 0) };
-        var bridgeLink = new HyperlinkButton
+        HyperlinkButton MakeLink(string text, string url) => new HyperlinkButton
         {
-            Content = "DX11 Bridge →",
-            NavigateUri = new Uri("https://github.com/NIGos/dlss5-bridge"),
+            Content = text,
+            NavigateUri = new Uri(url),
             FontSize = 10,
             Foreground = UIFactory.Brush(ResourceKeys.TextTertiaryBrush),
             Padding = new Thickness(0),
         };
-        var sfLink = new HyperlinkButton
-        {
-            Content = "ShortFuse →",
-            NavigateUri = new Uri("https://discord.com/channels/1408098019194310818/1543975158937821315"),
-            FontSize = 10,
-            Foreground = UIFactory.Brush(ResourceKeys.TextTertiaryBrush),
-            Padding = new Thickness(0),
-        };
-        linksRow.Children.Add(bridgeLink);
-        linksRow.Children.Add(sfLink);
+        linksRow.Children.Add(MakeLink("DLSS5 Tool →",  "https://discord.com/channels/1408098019194310818/1543802634991968366"));
+        linksRow.Children.Add(MakeLink("DX11 Bridge →", "https://github.com/NIGos/dlss5-bridge"));
+        linksRow.Children.Add(MakeLink("ShortFuse →",   "https://discord.com/channels/1408098019194310818/1543975158937821315"));
+        linksRow.Children.Add(MakeLink("Feeder →",      "https://github.com/jlrouzies-fr/DLSS5-Feeder"));
         _window.NeuralRenderingPanel.Children.Add(linksRow);
     }
 
@@ -552,32 +671,89 @@ public partial class DetailPanelBuilder
             Directory.CreateDirectory(deployDir);
             File.Copy(rdx5Svc.StagedFilePath, Path.Combine(deployDir, "renodx-dlss5.addon64"), overwrite: true);
             CrashReporter.Log($"[NeuralRendering] Deployed renodx-dlss5.addon64 to '{deployDir}'");
-
-            // Track in deployments so addon deploy pass keeps it
             AddonPackService.TrackAddonDeployment(installPath, "renodx-dlss5.addon64");
         }).ConfigureAwait(false);
 
-        // Deploy NR DLL — use selected version or newest
-        _window.DispatcherQueue?.TryEnqueue(() => statusBtn.Content = "Deploying NR DLL...");
-        var selectedVersion = _window.DispatcherQueue != null
-            ? await DispatchAsync<string?>(_window.DispatcherQueue, () => nrVersionCombo.SelectedItem as string)
-            : "Latest";
+        // Upgrade all DLSS DLLs to latest (SR/RR/FG + NR)
+        _window.DispatcherQueue?.TryEnqueue(() => statusBtn.Content = "Upgrading DLSS DLLs...");
+        await UpgradeDlssDllsAsync(card, dlssSvc, nrVersionCombo).ConfigureAwait(false);
+    }
 
-        string? nrDllPath;
-        if (string.IsNullOrEmpty(selectedVersion) || selectedVersion == "Latest")
-            nrDllPath = await dlssSvc.EnsureNewestDlssnrCachedAsync().ConfigureAwait(false);
+    /// <summary>
+    /// Deploys the newest DLSS SR/RR/FG/NR DLLs to the game using detected paths + sentinel pattern.
+    /// Used by DLSS5 Tool and DLSS5 Tool + Bridge installs.
+    /// </summary>
+    private async Task UpgradeDlssDllsAsync(GameCardViewModel card, IDlssStreamlineService dlssSvc, ComboBox? nrVersionCombo = null)
+    {
+        var installPath = card.InstallPath!;
+        var detection   = card.DlssDetection;
+
+        // Fetch newest cached DLLs
+        var cachedSr = await dlssSvc.EnsureNewestDlssCachedAsync().ConfigureAwait(false);
+        var cachedRr = await dlssSvc.EnsureNewestDlssdCachedAsync().ConfigureAwait(false);
+        var cachedFg = await dlssSvc.EnsureNewestDlssgCachedAsync().ConfigureAwait(false);
+
+        // NR DLL — use selected version or newest
+        string? nrSelectedVersion = null;
+        if (nrVersionCombo != null)
+        {
+            nrSelectedVersion = await DispatchAsync<string?>(_window.DispatcherQueue!,
+                () => nrVersionCombo.SelectedItem as string).ConfigureAwait(false);
+        }
+        string? cachedNr;
+        if (string.IsNullOrEmpty(nrSelectedVersion) || nrSelectedVersion == "Latest")
+            cachedNr = await dlssSvc.EnsureNewestDlssnrCachedAsync().ConfigureAwait(false);
         else
         {
-            var cachedDir = Path.Combine(
+            var nrDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "RHI", "DLSS-NR", selectedVersion);
-            nrDllPath = Path.Combine(cachedDir, "nvngx_dlssnr.dll");
-            if (!File.Exists(nrDllPath))
-                nrDllPath = await dlssSvc.EnsureNewestDlssnrCachedAsync().ConfigureAwait(false);
+                "RHI", "DLSS-NR", nrSelectedVersion);
+            cachedNr = Path.Combine(nrDir, "nvngx_dlssnr.dll");
+            if (!File.Exists(cachedNr))
+                cachedNr = await dlssSvc.EnsureNewestDlssnrCachedAsync().ConfigureAwait(false);
         }
 
-        if (nrDllPath != null)
-            await Task.Run(() => DeployNrDllSentinel(installPath, nrDllPath)).ConfigureAwait(false);
+        await Task.Run(() =>
+        {
+            // SR
+            if (cachedSr != null)
+            {
+                var dest = detection?.DlssPath ?? Path.Combine(installPath, "nvngx_dlss.dll");
+                DeployWithSentinel(cachedSr, dest, "NeuralRendering.UpgradeSR");
+            }
+            // RR
+            if (cachedRr != null)
+            {
+                var dest = detection?.DlssdPath ?? Path.Combine(installPath, "nvngx_dlssd.dll");
+                DeployWithSentinel(cachedRr, dest, "NeuralRendering.UpgradeRR");
+            }
+            // FG
+            if (cachedFg != null)
+            {
+                var dest = detection?.DlssgPath ?? Path.Combine(installPath, "nvngx_dlssg.dll");
+                DeployWithSentinel(cachedFg, dest, "NeuralRendering.UpgradeFG");
+            }
+            // NR
+            if (cachedNr != null)
+            {
+                var dest = detection?.DlssnrPath ?? Path.Combine(installPath, "nvngx_dlssnr.dll");
+                DeployNrDllSentinel(installPath, cachedNr); // uses the sentinel helper
+            }
+        }).ConfigureAwait(false);
+    }
+
+    /// <summary>Deploys src → dest with sentinel backup. If dest has no .original, backs up current first.</summary>
+    private static void DeployWithSentinel(string src, string dest, string logCtx)
+    {
+        try
+        {
+            var sentinel = dest + ".original";
+            if (File.Exists(dest) && !File.Exists(sentinel))
+                File.Copy(dest, sentinel); // backup game original
+            File.Copy(src, dest, overwrite: true);
+            CrashReporter.Log($"[{logCtx}] Deployed to '{dest}'");
+        }
+        catch (Exception ex) { CrashReporter.Log($"[{logCtx}] Failed '{dest}' — {ex.Message}"); }
     }
 
     private async Task InstallBridgeAddonAsync(
@@ -588,11 +764,15 @@ public partial class DetailPanelBuilder
         var installPath = card.InstallPath!;
         _window.DispatcherQueue?.TryEnqueue(() => statusBtn.Content = "Downloading DX11 Bridge...");
 
-        // Ensure staged
+        // Ensure staged — always re-download Bridge to get latest version
+        // (stale cached file may be from the old dead URL dlss5-dx11-bridge.addon64)
         var entry = addonSvc.AvailablePacks.FirstOrDefault(p =>
             p.PackageName.Equals(BridgePackageName, StringComparison.OrdinalIgnoreCase));
-        if (entry != null && !addonSvc.IsDownloaded(BridgePackageName))
+        if (entry != null)
+        {
+            addonSvc.RemoveAddon(BridgePackageName); // clear stale cached version
             await addonSvc.DownloadAddonAsync(entry).ConfigureAwait(false);
+        }
 
         // Deploy — Bridge goes in the game root (next to ReShade / exe), not reshade-addons
         _window.DispatcherQueue?.TryEnqueue(() => statusBtn.Content = "Deploying DX11 Bridge...");
@@ -691,20 +871,23 @@ public partial class DetailPanelBuilder
             }).ConfigureAwait(false);
         }
 
-        // Also deploy nvngx_dlss.dll if not present (required by feeder for non-DLSS games)
-        var dlssDest = Path.Combine(installPath, "nvngx_dlss.dll");
-        if (!File.Exists(dlssDest))
+        // Deploy newest nvngx_dlss.dll — required by Feeder beside the game exe (install root, not detected plugin path)
+        _window.DispatcherQueue?.TryEnqueue(() => statusBtn.Content = "Deploying DLSS SR...");
+        var cachedDlss = await _dlssStreamlineService.EnsureNewestDlssCachedAsync().ConfigureAwait(false);
+        if (cachedDlss != null)
         {
-            var cachedDlss = await _dlssStreamlineService.EnsureNewestDlssCachedAsync().ConfigureAwait(false);
-            if (cachedDlss != null)
+            await Task.Run(() =>
             {
-                await Task.Run(() =>
-                {
-                    File.Copy(cachedDlss, dlssDest, overwrite: false);
-                    File.WriteAllBytes(dlssDest + ".original", Array.Empty<byte>());
-                    CrashReporter.Log($"[NeuralRendering] Deployed nvngx_dlss.dll to '{installPath}'");
-                }).ConfigureAwait(false);
-            }
+                // Always deploy to install root — Feeder looks for nvngx_dlss.dll beside itself, not in deep plugin folders
+                var dlssDest     = Path.Combine(installPath, "nvngx_dlss.dll");
+                var dlssSentinel = dlssDest + ".original";
+                if (File.Exists(dlssDest) && !File.Exists(dlssSentinel))
+                    File.Copy(dlssDest, dlssSentinel); // backup game original if present
+                else if (!File.Exists(dlssDest))
+                    File.WriteAllBytes(dlssSentinel, Array.Empty<byte>()); // sentinel — game had none
+                File.Copy(cachedDlss, dlssDest, overwrite: true);
+                CrashReporter.Log($"[NeuralRendering] Deployed newest nvngx_dlss.dll to '{installPath}' (Feeder root)");
+            }).ConfigureAwait(false);
         }
 
         // Deploy DLSS5Feeder shader (DLSS5_Feed.fx) + LumeniteFX (motion vectors) — already in RHI shader library
@@ -717,6 +900,25 @@ public partial class DetailPanelBuilder
                 _shaderPackService.DeployToGameFolder(installPath, new[] { "DLSS5Feeder", "LumeniteFX" }, null);
                 CrashReporter.Log($"[NeuralRendering] Deployed DLSS5Feeder + LumeniteFX shaders to '{installPath}'");
             }).ConfigureAwait(false);
+
+            // Add to PerGameShaderSelection so SyncGameFolder keeps them deployed
+            _window.DispatcherQueue?.TryEnqueue(() =>
+            {
+                var gameKey = Models.GameKey.From(card.GameName, card.Source ?? "").ToKey();
+                var current = _gameNameService.PerGameShaderSelection.TryGetValue(gameKey, out var sel)
+                    ? sel.ToList() : new List<string>();
+                if (!current.Contains("DLSS5Feeder", StringComparer.OrdinalIgnoreCase))
+                    current.Add("DLSS5Feeder");
+                if (!current.Contains("LumeniteFX", StringComparer.OrdinalIgnoreCase))
+                    current.Add("LumeniteFX");
+                _gameNameService.PerGameShaderSelection[gameKey] = current;
+                // Set shader mode to Select — must happen AFTER selection is written
+                // so SaveNameMappings() inside SetPerGameShaderMode picks up the selection
+                _window.ViewModel.SetPerGameShaderMode(card.GameName, "Select", card.Source ?? "");
+                // Also update the card directly so the next SyncGameFolder pass uses it
+                card.ShaderModeOverride = "Select";
+                _window.ViewModel.SaveSettingsPublic();
+            });
         }
         catch (Exception ex)
         {

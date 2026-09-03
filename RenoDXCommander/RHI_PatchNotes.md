@@ -2,18 +2,20 @@
 
 ### New
 
-- **Neural Rendering section** — a new self-contained section in the game detail panel (between Game Overrides and NVIDIA Profile Overrides) for installing DLSS 5 Neural Rendering. No addon picker needed. Four modes selectable via combo:
-  - **DLSS5 Tool** — for DX12 native-DLSS games. Deploys `renodx-dlss5.addon64` + `nvngx_dlssnr.dll` automatically.
-  - **DLSS5 Tool + DX11 Bridge** — for DX11/Vulkan native-DLSS games. Same as above plus `dlss5-bridge.addon64`.
-  - **DLSS Tool (ShortFuse)** — for games with no native DLSS (any API, 64-bit). Deploys the full DLSS SR/RR/FG/NR stack + Streamline via the sentinel pattern.
-  - **DLSS5 Feeder** — for 32-bit games or advanced use. Deploys the addon and links to setup instructions.
-  - NR DLL version picker, status indicators, Install/Reinstall/Remove buttons, and automatic method detection for existing installs.
+- **Neural Rendering section** — a dedicated self-contained section in the game detail panel (between Game Overrides and NVIDIA Profile Overrides) for installing DLSS 5 Neural Rendering. No addon picker required. Method combo with four options:
+  - **DLSS5 Tool** — for native DLSS games. Deploys `renodx-dlss5.addon64`, upgrades DLSS SR/RR/FG to latest, and deploys `nvngx_dlssnr.dll`.
+  - **DLSS5 Tool + DX11 Bridge** — for DX11/Vulkan native-DLSS games. Same as above plus `dlss5-bridge.addon64` (always downloads latest).
+  - **DLSS Tool (ShortFuse)** — for any 64-bit game with or without native DLSS. Deploys the full DLSS SR/RR/FG/NR stack and Streamline via the sentinel pattern.
+  - **DLSS5 Feeder** — for games with no native DLSS (all APIs). Deploys the Feeder addon, DLSS5 Tool as neural consumer, `nvngx_dlss.dll`, `nvngx_dlssnr.dll`, and the required shaders (`DLSS5_Feed.fx` + LumeniteFX motion vectors) automatically.
+  - ReShade is installed automatically if not already present.
+  - NR DLL version picker, per-file status indicators with versions, Install/Reinstall/Remove buttons, automatic method detection for existing installs, and descriptions with links for each method.
 
 ### Manifest Updates
 
 - Added a note to Ori and the Blind Forest: Definitive Edition warning that the generic Unity mod may have visual issues and the named mod is deprecated.
 - Added install path override for The Witcher 3: Wild Hunt - Complete Edition (`bin\x64_dx12`), engine hint (REDengine), and graphics API override (DX12).
 - Fixed Outlast detecting as 32-bit and resolving to the wrong path — now forced 64-bit with `Binaries\Win64` path override and engine hint set to Unreal (Legacy).
+- Fixed DLSS5 DX11 Bridge download URL — old repo was deleted; updated to `NIGos/dlss5-bridge` with correct filename `dlss5-bridge.addon64`.
 
 ---
 

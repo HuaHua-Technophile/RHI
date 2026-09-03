@@ -1072,6 +1072,7 @@ public partial class DetailPanelBuilder
         // Sync mutable state back from context
         capturedName = ctx.CapturedName;
 
+        BuildNeuralRenderingSection(card);
         BuildNvidiaProfileSection(card, capturedName);
 
         ctx.DxvkToggle = BuildDxvkAndManagementSection(card, capturedName, gameName, ctx) ?? ctx.DxvkToggle;

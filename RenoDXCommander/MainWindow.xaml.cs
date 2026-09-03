@@ -603,6 +603,7 @@ public sealed partial class MainWindow : Window
                                     DetailPanel.Visibility = Visibility.Visible;
                                     BuildOverridesPanel(target);
                                     OverridesContainer.Visibility = Visibility.Visible;
+                                    NeuralRenderingContainer.Visibility = Visibility.Visible;
                                     NvidiaProfileContainer.Visibility = Visibility.Visible;
                                     ManagementContainer.Visibility = Visibility.Visible;
                                 }
@@ -629,6 +630,8 @@ public sealed partial class MainWindow : Window
                     DetailPanel.Visibility = Visibility.Collapsed;
                     OverridesPanel.Children.Clear();
                     OverridesContainer.Visibility = Visibility.Collapsed;
+                    NeuralRenderingPanel.Children.Clear();
+                    NeuralRenderingContainer.Visibility = Visibility.Collapsed;
                     NvidiaProfilePanel.Children.Clear();
                     NvidiaProfileContainer.Visibility = Visibility.Collapsed;
                     ManagementPanel.Children.Clear();
@@ -639,6 +642,8 @@ public sealed partial class MainWindow : Window
                     DetailPanel.Visibility = Visibility.Collapsed;
                     OverridesPanel.Children.Clear();
                     OverridesContainer.Visibility = Visibility.Collapsed;
+                    NeuralRenderingPanel.Children.Clear();
+                    NeuralRenderingContainer.Visibility = Visibility.Collapsed;
                     NvidiaProfilePanel.Children.Clear();
                     NvidiaProfileContainer.Visibility = Visibility.Collapsed;
                     ManagementPanel.Children.Clear();

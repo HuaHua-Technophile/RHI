@@ -1152,6 +1152,31 @@ public class AddonPackService : IAddonPackService
     internal static string GetCachePath() => CachePath;
     internal static string GetVersionsJsonPath() => VersionsJsonPath;
 
+    /// <summary>
+    /// Adds a deployed addon filename to the tracker for the given install path.
+    /// Called by components (e.g. Neural Rendering section) that deploy addons directly
+    /// without going through DeployAddonsForGame.
+    /// </summary>
+    public static void TrackAddonDeployment(string installPath, string addonFileName)
+    {
+        try
+        {
+            var deployments = LoadDeployments();
+            if (!deployments.TryGetValue(installPath, out var tracked))
+            {
+                tracked = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                deployments[installPath] = tracked;
+            }
+            tracked.Add(addonFileName);
+            SaveDeployments(deployments);
+            CrashReporter.Log($"[AddonPackService.TrackAddonDeployment] Tracked '{addonFileName}' at '{installPath}'");
+        }
+        catch (Exception ex)
+        {
+            CrashReporter.Log($"[AddonPackService.TrackAddonDeployment] Failed — {ex.Message}");
+        }
+    }
+
     // ── Deployment tracker ────────────────────────────────────────────────────────
 
     private static readonly object _deploymentsLock = new();

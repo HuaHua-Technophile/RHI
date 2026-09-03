@@ -14,7 +14,7 @@ public class DofFixService : IDofFixService
 {
     private const string AddonFileName = "renodx-universal_ue-dof-fix.addon64";
     private const string TagPrefix = "ue-dof-fix-";
-    private const string GitHubApiUrl = "https://api.github.com/repos/RankFTW/rhi-repo/releases";
+    private const string GitHubApiUrl = "https://api.github.com/repos/RankFTW/rhi-repo/releases?per_page=100";
     private const string DefaultDownloadBaseUrl = "https://github.com/RankFTW/rhi-repo/releases/download";
 
     private readonly HttpClient _http;

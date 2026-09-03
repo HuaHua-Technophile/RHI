@@ -1,3 +1,11 @@
+## v2.5.7
+
+### Bug Fixes
+
+- Fixed DLSS5 Feeder failing to download for some users — the zip filename changes with each release so the hardcoded URL broke on updates. RHI now resolves the download URL dynamically from the GitHub releases API so Feeder auto-updates correctly going forward.
+
+---
+
 ## v2.5.6
 
 ### Bug Fixes

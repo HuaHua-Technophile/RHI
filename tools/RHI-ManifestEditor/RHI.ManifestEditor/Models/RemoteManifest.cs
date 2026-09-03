@@ -354,6 +354,9 @@ public class ManifestAddonPack
     [JsonPropertyName("deployFileName")]
     public string? DeployFileName { get; set; }
 
+    [JsonPropertyName("releaseApiUrl")]
+    public string? ReleaseApiUrl { get; set; }
+
     [JsonPropertyName("disabled")]
     public bool? Disabled { get; set; }
 }

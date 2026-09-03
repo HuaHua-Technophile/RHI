@@ -370,6 +370,7 @@ public class AddonPackService : IAddonPackService
                     RepositoryUrl = entry.RepositoryUrl ?? existing.RepositoryUrl,
                     EffectInstallPath = entry.EffectInstallPath ?? existing.EffectInstallPath,
                     DeployFileName = entry.DeployFileName ?? existing.DeployFileName,
+                    ReleaseApiUrl = entry.ReleaseApiUrl ?? existing.ReleaseApiUrl,
                 };
             }
             else
@@ -377,7 +378,7 @@ public class AddonPackService : IAddonPackService
                 // New addon from manifest — requires at minimum a PackageName and at least one URL
                 if (string.IsNullOrEmpty(entry.PackageName))
                     continue;
-                if (string.IsNullOrEmpty(entry.DownloadUrl) && string.IsNullOrEmpty(entry.DownloadUrl32) && string.IsNullOrEmpty(entry.DownloadUrl64))
+                if (string.IsNullOrEmpty(entry.DownloadUrl) && string.IsNullOrEmpty(entry.DownloadUrl32) && string.IsNullOrEmpty(entry.DownloadUrl64) && string.IsNullOrEmpty(entry.ReleaseApiUrl))
                     continue;
 
                 merged.Insert(0, new AddonEntry(
@@ -389,7 +390,8 @@ public class AddonPackService : IAddonPackService
                     DownloadUrl64: entry.DownloadUrl64,
                     RepositoryUrl: entry.RepositoryUrl,
                     EffectInstallPath: entry.EffectInstallPath,
-                    DeployFileName: entry.DeployFileName
+                    DeployFileName: entry.DeployFileName,
+                    ReleaseApiUrl: entry.ReleaseApiUrl
                 ));
             }
         }
@@ -460,7 +462,22 @@ public class AddonPackService : IAddonPackService
             // Collect URLs to download
             var downloads = new List<(string url, string extension)>();
 
-            if (!string.IsNullOrEmpty(entry.DownloadUrl32) && !string.IsNullOrEmpty(entry.DownloadUrl64))
+            // If releaseApiUrl is set, resolve the actual asset URL + version tag dynamically
+            if (!string.IsNullOrEmpty(entry.ReleaseApiUrl))
+            {
+                var (resolvedUrl, resolvedTag) = await ResolveDownloadUrlFromApiAsync(entry.ReleaseApiUrl).ConfigureAwait(false);
+                if (resolvedUrl == null)
+                {
+                    CrashReporter.Log($"[AddonPackService.DownloadAddonAsync] Could not resolve asset URL from API for '{entry.PackageName}'");
+                    progress?.Report(($"❌ Failed to resolve download URL for {entry.PackageName}", 0));
+                    return;
+                }
+                // Use the tag as the version token unless the caller already supplied one
+                versionOverride ??= resolvedTag;
+                var ext = ClassifyUrlExtension(resolvedUrl);
+                downloads.Add((resolvedUrl, ext));
+            }
+            else if (!string.IsNullOrEmpty(entry.DownloadUrl32) && !string.IsNullOrEmpty(entry.DownloadUrl64))
             {
                 // Both 32/64 variants provided
                 downloads.Add((entry.DownloadUrl32, ".addon32"));
@@ -572,17 +589,32 @@ public class AddonPackService : IAddonPackService
             try
             {
                 // Pick a representative URL for version resolution
-                var versionUrl = entry.DownloadUrl64
-                    ?? entry.DownloadUrl32
-                    ?? entry.DownloadUrl;
-
-                if (string.IsNullOrEmpty(versionUrl))
+                // For API-based addons, resolve the version tag from the GitHub API
+                string remoteVersion;
+                if (!string.IsNullOrEmpty(entry.ReleaseApiUrl))
                 {
-                    CrashReporter.Log($"[AddonPackService.CheckAndUpdateAllAsync] No download URL for '{entry.PackageName}', skipping.");
-                    continue;
+                    var (_, tag) = await ResolveDownloadUrlFromApiAsync(entry.ReleaseApiUrl).ConfigureAwait(false);
+                    if (tag == null)
+                    {
+                        CrashReporter.Log($"[AddonPackService.CheckAndUpdateAllAsync] Could not resolve version from API for '{entry.PackageName}', skipping.");
+                        continue;
+                    }
+                    remoteVersion = tag;
                 }
+                else
+                {
+                    var versionUrl = entry.DownloadUrl64
+                        ?? entry.DownloadUrl32
+                        ?? entry.DownloadUrl;
 
-                var remoteVersion = await ResolveVersionToken(versionUrl);
+                    if (string.IsNullOrEmpty(versionUrl))
+                    {
+                        CrashReporter.Log($"[AddonPackService.CheckAndUpdateAllAsync] No download URL for '{entry.PackageName}', skipping.");
+                        continue;
+                    }
+
+                    remoteVersion = await ResolveVersionToken(versionUrl);
+                }
                 var storedVersion = versions.TryGetValue(entry.PackageName, out var info)
                     ? info.Version
                     : null;
@@ -590,11 +622,13 @@ public class AddonPackService : IAddonPackService
                 if (string.Equals(remoteVersion, storedVersion, StringComparison.Ordinal))
                 {
                     // Check if OriginalName is missing — if so, re-download to capture it
+                    // API-based addons always download a zip, so check them unconditionally
+                    bool isZipBased = !string.IsNullOrEmpty(entry.ReleaseApiUrl)
+                        || (entry.DownloadUrl64 ?? entry.DownloadUrl32 ?? entry.DownloadUrl ?? "").Contains(".zip", StringComparison.OrdinalIgnoreCase);
                     var needsNameBackfill = info != null
                         && string.IsNullOrEmpty(info.OriginalName64)
                         && string.IsNullOrEmpty(info.OriginalName32)
-                        && (versionUrl.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
-                            || versionUrl.Contains(".zip", StringComparison.OrdinalIgnoreCase));
+                        && isZipBased;
 
                     if (needsNameBackfill)
                     {
@@ -1005,6 +1039,64 @@ public class AddonPackService : IAddonPackService
     {
         var path = GetUrlPath(url);
         return path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Resolves the latest release asset download URL and version tag from a GitHub releases API URL.
+    /// Prefers .addon64 > .addon32 > .zip assets in that order.
+    /// Returns (downloadUrl, versionTag) or (null, null) on failure.
+    /// </summary>
+    internal async Task<(string? downloadUrl, string? versionTag)> ResolveDownloadUrlFromApiAsync(string releaseApiUrl)
+    {
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, releaseApiUrl);
+            req.Headers.Add("User-Agent", "RHI");
+            req.Headers.Add("Accept", "application/vnd.github+json");
+            var resp = await _http.SendAsync(req).ConfigureAwait(false);
+            if (!resp.IsSuccessStatusCode)
+            {
+                CrashReporter.Log($"[AddonPackService.ResolveDownloadUrlFromApiAsync] HTTP {(int)resp.StatusCode} for {releaseApiUrl}");
+                return (null, null);
+            }
+
+            var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // Extract version tag
+            string? tag = null;
+            if (root.TryGetProperty("tag_name", out var tagEl))
+                tag = tagEl.GetString();
+
+            // Find best asset: prefer .addon64, then .addon32, then .zip
+            if (!root.TryGetProperty("assets", out var assetsEl)) return (null, tag);
+
+            string? addon64 = null, addon32 = null, zip = null;
+            foreach (var asset in assetsEl.EnumerateArray())
+            {
+                var name = asset.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "";
+                var url  = asset.TryGetProperty("browser_download_url", out var u) ? u.GetString() : null;
+                if (url == null) continue;
+
+                if (name.EndsWith(".addon64", StringComparison.OrdinalIgnoreCase)) addon64 ??= url;
+                else if (name.EndsWith(".addon32", StringComparison.OrdinalIgnoreCase)) addon32 ??= url;
+                else if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) zip ??= url;
+            }
+
+            var chosen = addon64 ?? addon32 ?? zip;
+            if (chosen != null)
+                CrashReporter.Log($"[AddonPackService.ResolveDownloadUrlFromApiAsync] Resolved '{chosen}' (tag={tag}) from {releaseApiUrl}");
+            else
+                CrashReporter.Log($"[AddonPackService.ResolveDownloadUrlFromApiAsync] No suitable asset found at {releaseApiUrl}");
+
+            return (chosen, tag);
+        }
+        catch (Exception ex)
+        {
+            CrashReporter.Log($"[AddonPackService.ResolveDownloadUrlFromApiAsync] Failed — {ex.Message}");
+            return (null, null);
+        }
     }
 
     /// <summary>

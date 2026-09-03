@@ -560,6 +560,15 @@ public class ManifestAddonPack
     [JsonPropertyName("deployFileName")]
     public string? DeployFileName { get; set; }
 
+    /// <summary>
+    /// GitHub releases API URL (e.g. https://api.github.com/repos/owner/repo/releases/latest).
+    /// When set, RHI resolves the actual asset download URL at runtime so the addon
+    /// auto-updates even when the release zip filename changes between versions.
+    /// Overrides downloadUrl/downloadUrl64/downloadUrl32 for download purposes.
+    /// </summary>
+    [JsonPropertyName("releaseApiUrl")]
+    public string? ReleaseApiUrl { get; set; }
+
     /// <summary>When true, the addon is removed from the active list.</summary>
     [JsonPropertyName("disabled")]
     public bool? Disabled { get; set; }

@@ -101,6 +101,9 @@ public interface IGameNameService
     /// <summary>Per-game OptiScaler variant override. Key = "GameName|Store", Value = "Stable" or "Nightly".</summary>
     Dictionary<string, string> OsVariantOverrides { get; }
 
+    /// <summary>Per-game Neural Rendering method override. Key = "GameName|Store", Value = "DLSS5Tool", "DLSS5ToolBridge", "ShortFuse", or "Feeder". Absent = auto-detect.</summary>
+    Dictionary<string, string> NrMethodOverrides { get; }
+
     /// <summary>Per-game HDR auto-toggle overrides. "On" or "Off". Absent = use global.</summary>
     Dictionary<string, string> HdrToggleOverrides { get; }
 

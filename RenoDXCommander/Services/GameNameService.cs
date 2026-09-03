@@ -54,6 +54,9 @@ public class GameNameService : IGameNameService
     /// <summary>Per-game OptiScaler variant override. Key = "GameName|Store", Value = "Stable" or "Nightly".</summary>
     private Dictionary<string, string> _osVariantOverrides = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>Per-game Neural Rendering method override. Key = "GameName|Store", Value = "DLSS5Tool", "DLSS5ToolBridge", "ShortFuse", or "Feeder". Absent = auto-detect.</summary>
+    private Dictionary<string, string> _nrMethodOverrides = new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>Per-game HDR auto-toggle overrides. Key = game name, Value = "On" or "Off". Absent = use global default.</summary>
     private Dictionary<string, string> _hdrToggleOverrides = new(StringComparer.OrdinalIgnoreCase);
 
@@ -149,6 +152,8 @@ public class GameNameService : IGameNameService
     public Dictionary<string, int> LiliumPresetOverrides => _liliumPresetOverrides;
     /// <summary>Per-game OptiScaler variant override. Key = "GameName|Store", Value = "Stable" or "Nightly".</summary>
     public Dictionary<string, string> OsVariantOverrides => _osVariantOverrides;
+    /// <summary>Per-game Neural Rendering method override. Key = "GameName|Store", Value = "DLSS5Tool", "DLSS5ToolBridge", "ShortFuse", or "Feeder". Absent = auto-detect.</summary>
+    public Dictionary<string, string> NrMethodOverrides => _nrMethodOverrides;
     /// <summary>Per-game HDR auto-toggle overrides. "On" or "Off". Absent = use global.</summary>
     public Dictionary<string, string> HdrToggleOverrides => _hdrToggleOverrides;
     /// <summary>Per-game Resolution auto-toggle overrides. "On" or "Off". Absent = use global.</summary>
@@ -241,6 +246,7 @@ public class GameNameService : IGameNameService
         _apiOverrides           = new(StringComparer.OrdinalIgnoreCase);
         _reShadeChannelOverrides = new(StringComparer.OrdinalIgnoreCase);
         _dxvkVariantOverrides = new(StringComparer.OrdinalIgnoreCase);
+        _nrMethodOverrides = new(StringComparer.OrdinalIgnoreCase);
         _lumaEnabledGames       = new(StringComparer.OrdinalIgnoreCase);
         _lumaDisabledGames      = new(StringComparer.OrdinalIgnoreCase);
         _normalReShadeGames     = new(StringComparer.OrdinalIgnoreCase);
@@ -445,6 +451,11 @@ public class GameNameService : IGameNameService
         _osVariantOverrides = new(StringComparer.OrdinalIgnoreCase);
         foreach (var kv in osVariantOvDict) _osVariantOverrides[kv.Key] = kv.Value;
 
+        var nrMethodOvDict = Load<Dictionary<string, string>>("NrMethodOverrides",
+            new(StringComparer.OrdinalIgnoreCase));
+        _nrMethodOverrides = new(StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in nrMethodOvDict) _nrMethodOverrides[kv.Key] = kv.Value;
+
         var liliumPresetOvDict = Load<Dictionary<string, int>>("LiliumPresetOverrides",
             new(StringComparer.OrdinalIgnoreCase));
         _liliumPresetOverrides = new(StringComparer.OrdinalIgnoreCase);
@@ -610,6 +621,7 @@ public class GameNameService : IGameNameService
                 s["DxvkVariantOverrides"] = JsonSerializer.Serialize(_dxvkVariantOverrides);
                 s["LiliumPresetOverrides"] = JsonSerializer.Serialize(_liliumPresetOverrides);
                 s["OsVariantOverrides"] = JsonSerializer.Serialize(_osVariantOverrides);
+                s["NrMethodOverrides"] = JsonSerializer.Serialize(_nrMethodOverrides);
                 s["HdrToggleOverrides"] = JsonSerializer.Serialize(_hdrToggleOverrides);
                 s["ResToggleOverrides"] = JsonSerializer.Serialize(_resToggleOverrides);
                 s["LaunchExeOverrides"] = JsonSerializer.Serialize(_launchExeOverrides);
@@ -782,6 +794,7 @@ public class GameNameService : IGameNameService
         MigrateCompositeDict(_liliumPresetOverrides, oldName, newName);
         MigrateCompositeDict(_customReShadeSelection, oldName, newName);
         MigrateCompositeDict(_osVariantOverrides, oldName, newName);
+        MigrateCompositeDict(_nrMethodOverrides, oldName, newName);
         // These four are name-only (not per-store) — use name-only migration
         MigrateDict(_hdrToggleOverrides, oldName, newName);
         MigrateDict(_resToggleOverrides, oldName, newName);

@@ -1138,6 +1138,14 @@
                             <StackPanel x:Name="OverridesPanel" x:FieldModifier="internal" Spacing="6"/>
                         </Border>
 
+                        <!-- ── Neural Rendering section ── -->
+                        <Border x:Name="NeuralRenderingContainer" x:FieldModifier="internal"
+                                Background="{StaticResource SurfaceComponentTableBrush}" CornerRadius="12"
+                                BorderBrush="{StaticResource BorderDefaultBrush}" BorderThickness="1"
+                                Padding="14,12" Visibility="Collapsed">
+                            <StackPanel x:Name="NeuralRenderingPanel" x:FieldModifier="internal" Spacing="6"/>
+                        </Border>
+
                         <!-- ── Nvidia Profile Overrides section ── -->
                         <Border x:Name="NvidiaProfileContainer" x:FieldModifier="internal"
                                 Background="{StaticResource SurfaceComponentTableBrush}" CornerRadius="12"

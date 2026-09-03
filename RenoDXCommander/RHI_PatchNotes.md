@@ -1,5 +1,14 @@
 ## v2.5.5
 
+### New
+
+- **Neural Rendering section** — a new self-contained section in the game detail panel (between Game Overrides and NVIDIA Profile Overrides) for installing DLSS 5 Neural Rendering. No addon picker needed. Four modes selectable via combo:
+  - **DLSS5 Tool** — for DX12 native-DLSS games. Deploys `renodx-dlss5.addon64` + `nvngx_dlssnr.dll` automatically.
+  - **DLSS5 Tool + DX11 Bridge** — for DX11/Vulkan native-DLSS games. Same as above plus `dlss5-bridge.addon64`.
+  - **DLSS Tool (ShortFuse)** — for games with no native DLSS (any API, 64-bit). Deploys the full DLSS SR/RR/FG/NR stack + Streamline via the sentinel pattern.
+  - **DLSS5 Feeder** — for 32-bit games or advanced use. Deploys the addon and links to setup instructions.
+  - NR DLL version picker, status indicators, Install/Reinstall/Remove buttons, and automatic method detection for existing installs.
+
 ### Manifest Updates
 
 - Added a note to Ori and the Blind Forest: Definitive Edition warning that the generic Unity mod may have visual issues and the named mod is deprecated.

@@ -229,6 +229,33 @@ public partial class MainViewModel
 
     // ── Deploy Streamline ─────────────────────────────────────────────────────
 
+    // ── Neural Rendering Method ───────────────────────────────────────────────
+
+    /// <summary>Returns the persisted NR method for a game. Null = not set (auto-detect from game state).</summary>
+    public string? GetNrMethodOverride(string gameName, string store = "")
+    {
+        var key = GameKey.From(gameName, store).ToKey();
+        if (_gameNameService.NrMethodOverrides.TryGetValue(key, out var v)) return v;
+        if (_gameNameService.NrMethodOverrides.TryGetValue(gameName, out var v2)) return v2;
+        return null;
+    }
+
+    /// <summary>Sets the persisted NR method for a game. Null clears the override.</summary>
+    public void SetNrMethodOverride(string gameName, string? value, string store = "")
+    {
+        var key = GameKey.From(gameName, store).ToKey();
+        if (string.IsNullOrEmpty(value))
+        {
+            _gameNameService.NrMethodOverrides.Remove(key);
+            _gameNameService.NrMethodOverrides.Remove(gameName);
+        }
+        else
+            _gameNameService.NrMethodOverrides[key] = value;
+        SaveNameMappings();
+    }
+
+    // ── Deploy Streamline (original) ──────────────────────────────────────────
+
     /// <summary>Returns whether Deploy Streamline is enabled for a game.</summary>
     public bool GetOsDeployStreamline(string gameName, string store = "")
     {

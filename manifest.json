@@ -508,6 +508,7 @@
   },
   "engineHintOverrides": {
     "Avowed": "Unreal Engine 5.3.2",
+    "ACE COMBAT 7": "Unreal Engine 4.27.2",
     "METAL GEAR SOLID 4: Guns of the Patriots - Master Collection Version": "MGS4 Engine",
     "Outlast": "Unreal (Legacy)",
     "Beast of Reincarnation": "Unreal Engine 5.4.4",
@@ -538,6 +539,7 @@
   },
   "graphicsApiOverrides": {
     "Anno 117 - Pax Romana": "DX12",
+    "ACE COMBAT 7": "DirectX11",
     "Crimson Desert": "DX12",
     "Resident Evil 4": "DX12",
     "Resident Evil Requiem": "DX12",

@@ -17,16 +17,6 @@
 - Fixed Outlast detecting as 32-bit and resolving to the wrong path — now forced 64-bit with `Binaries\Win64` path override and engine hint set to Unreal (Legacy).
 - Fixed DLSS5 DX11 Bridge download URL — old repo was deleted; updated to `NIGos/dlss5-bridge` with correct filename `dlss5-bridge.addon64`.
 
-### Bug Fixes
-
-- Fixed DLSS5 Feeder not being pre-selected for games with no native DLSS — it was defaulting to ShortFuse instead.
-- Fixed Feeder `ReShadePreset.ini` not enabling `Lumenite_Kernel` and `DLSS5_Feed` techniques on first launch — preset now written with correct `Techniques` and `TechniqueSorting` order so both are active immediately after restarting the game.
-- Fixed Feeder deploy only removing `DLSS5Feeder` from per-game shader selection on uninstall, leaving `LumeniteFX` orphaned.
-- Fixed Feeder shader deploy deploying all LumeniteFX and DLSS5Feeder pack files instead of only `lumenite_Kernel.fx` and `DLSS5_Feed.fx`.
-- Fixed DLSS5 Tool and Bridge not restoring or deleting DLSS DLLs (SR/RR/FG/NR) on Remove — DLLs were left behind with no cleanup.
-- Fixed DLSS5 Tool not writing sentinel files when deploying to games that had no prior DLSS — uninstall now correctly deletes those DLLs rather than leaving them behind.
-- Fixed Neural Rendering section appearing on Page 0 (Components) in Simple View — it now shows on the same page as Game Overrides.
-
 ---
 
 ## v2.5.4

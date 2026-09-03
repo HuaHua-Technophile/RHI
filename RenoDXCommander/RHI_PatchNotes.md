@@ -1,4 +1,13 @@
+## v2.5.6
+
+### Bug Fixes
+
+- Fixed `renodx-dlss5.addon64` deployed by the Neural Rendering section being removed on the next Refresh — the addon cleanup pass was treating it as stale since it wasn't deployed through the standard addon system.
+
+---
+
 ## v2.5.5
+
 
 ### New
 

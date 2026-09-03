@@ -797,13 +797,23 @@ public class AddonPackService : IAddonPackService
                 if (deployedFileNames.Contains(fileName))
                     continue;
 
+                // Don't remove renodx-dlss5 addon if the Neural Rendering section owns it
+                // (detected by presence of nvngx_dlssnr.dll or its sentinel in the same folder)
+                if (fileName.Equals("renodx-dlss5.addon64", StringComparison.OrdinalIgnoreCase)
+                    || fileName.Equals("renodx-dlss5.addon32", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (File.Exists(Path.Combine(installPath, "nvngx_dlssnr.dll"))
+                        || File.Exists(Path.Combine(installPath, "nvngx_dlssnr.dll.original")))
+                        continue; // NR section manages this — leave it alone
+                }
+
                 try
                 {
                     File.Delete(file);
                     trackedFiles.Remove(fileName);
                     CrashReporter.Log($"[AddonPackService.DeployAddonsForGame] Removed stale addon '{fileName}' from '{installPath}'.");
 
-                    // If DLSS5 Tool addon was removed, also clean up the NR dll via sentinel pattern
+                // If DLSS5 Tool addon was removed, also clean up the NR dll via sentinel pattern.
                     if (fileName.Equals("renodx-dlss5.addon64", StringComparison.OrdinalIgnoreCase)
                         || fileName.Equals("renodx-dlss5.addon32", StringComparison.OrdinalIgnoreCase))
                     {

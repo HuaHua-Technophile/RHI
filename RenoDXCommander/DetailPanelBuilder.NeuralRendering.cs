@@ -686,7 +686,8 @@ public partial class DetailPanelBuilder
             Directory.CreateDirectory(deployDir);
             File.Copy(rdx5Svc.StagedFilePath, Path.Combine(deployDir, "renodx-dlss5.addon64"), overwrite: true);
             CrashReporter.Log($"[NeuralRendering] Deployed renodx-dlss5.addon64 to '{deployDir}'");
-            AddonPackService.TrackAddonDeployment(installPath, "renodx-dlss5.addon64");
+            // Note: intentionally NOT calling TrackAddonDeployment — NR-managed files are not
+            // tracked by AddonPackService to prevent the stale-cleanup pass from removing them.
         }).ConfigureAwait(false);
 
         // Upgrade all DLSS DLLs to latest (SR/RR/FG + NR)
@@ -929,7 +930,8 @@ public partial class DetailPanelBuilder
                 var deployDir = ModInstallService.GetAddonDeployPath(installPath);
                 Directory.CreateDirectory(deployDir);
                 File.Copy(rdx5Svc.StagedFilePath, Path.Combine(deployDir, "renodx-dlss5.addon64"), overwrite: true);
-                AddonPackService.TrackAddonDeployment(installPath, "renodx-dlss5.addon64");
+                // Note: intentionally NOT calling TrackAddonDeployment — NR-managed files are not
+                // tracked by AddonPackService to prevent the stale-cleanup pass from removing them.
                 CrashReporter.Log($"[NeuralRendering] Deployed renodx-dlss5.addon64 (Feeder consumer) to '{deployDir}'");
             }).ConfigureAwait(false);
         }

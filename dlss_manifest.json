@@ -1,5 +1,6 @@
 {
   "dlss": [
+    { "version": "310.9.0", "url": "https://github.com/RankFTW/rhi-repo/releases/download/dlss-310.9.0/nvngx_dlss_310.9.0.zip" },
     { "version": "310.8.0", "url": "https://github.com/RankFTW/rhi-repo/releases/download/dlss-310.8.0/nvngx_dlss_310.8.0.zip" },
     { "version": "310.7.129", "url": "https://github.com/RankFTW/rhi-repo/releases/download/dlss-310.7.129/nvngx_dlss_310.7.129.zip" },
     { "version": "310.7.128", "url": "https://github.com/RankFTW/rhi-repo/releases/download/dlss-310.7.128/nvngx_dlss_310.7.128.zip" },

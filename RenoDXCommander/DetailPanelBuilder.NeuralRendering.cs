@@ -161,30 +161,35 @@ public partial class DetailPanelBuilder
         void RefreshStatus()
         {
             statusPanel.Children.Clear();
-            bool d5i = rdx5Svc.IsInstalledIn(installPath);
-            bool sfi = rdx5Svc.IsSfInstalledIn(installPath);
-            bool nri = File.Exists(Path.Combine(installPath, "nvngx_dlssnr.dll"));
-            bool bri = File.Exists(Path.Combine(installPath, BridgeDeployFile));
-            bool fei = File.Exists(Path.Combine(installPath, card.Is32Bit ? FeederDeployFile32 : FeederDeployFile64));
-            string? nrv = nri ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(Path.Combine(installPath, "nvngx_dlssnr.dll"))) : null;
+            bool d5i  = rdx5Svc.IsInstalledIn(installPath);
+            bool sfi  = rdx5Svc.IsSfInstalledIn(installPath);
+            bool nri  = File.Exists(Path.Combine(installPath, "nvngx_dlssnr.dll"));
+            bool bri  = File.Exists(Path.Combine(installPath, BridgeDeployFile));
+            bool fei  = File.Exists(Path.Combine(installPath, card.Is32Bit ? FeederDeployFile32 : FeederDeployFile64));
+            bool rsi  = card.IsRsInstalled;
+            bool dlssi  = File.Exists(Path.Combine(installPath, "nvngx_dlss.dll"));
+            bool dlssdi = File.Exists(Path.Combine(installPath, "nvngx_dlssd.dll"));
+            bool dlssgi = File.Exists(Path.Combine(installPath, "nvngx_dlssg.dll"));
+            string? nrv   = nri   ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(Path.Combine(installPath, "nvngx_dlssnr.dll"))) : null;
+            string? dlssv = dlssi ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(Path.Combine(installPath, "nvngx_dlss.dll"))) : null;
+            string? dlssdv = dlssdi ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(Path.Combine(installPath, "nvngx_dlssd.dll"))) : null;
+            string? dlssgv = dlssgi ? DlssStreamlineService.FormatVersion(dlssSvc.GetFileVersion(Path.Combine(installPath, "nvngx_dlssg.dll"))) : null;
 
-            T MakeTag<T>(string text, bool ok) where T : FrameworkElement, new()
+            void Tag(string text, bool ok)
             {
-                var tb = new TextBlock
+                statusPanel.Children.Add(new TextBlock
                 {
                     Text = text,
                     FontSize = 10,
                     Foreground = UIFactory.Brush(ok ? ResourceKeys.AccentGreenBrush : ResourceKeys.TextTertiaryBrush),
-                };
-                statusPanel.Children.Add(tb);
-                return (T)(FrameworkElement)tb;
+                });
             }
-
-            void Tag(string text, bool ok) => MakeTag<TextBlock>(text, ok);
 
             var selectedKey = (methodCombo.SelectedItem as ComboBoxItem)?.Tag as string
                            ?? methodItems.ElementAtOrDefault(methodCombo.SelectedIndex)?.Key
                            ?? effectiveMethod;
+
+            Tag(rsi ? "✓ ReShade" : "✗ ReShade", rsi);
 
             switch (selectedKey)
             {
@@ -198,14 +203,19 @@ public partial class DetailPanelBuilder
                     Tag(nri ? $"✓ NR DLL {nrv}" : "✗ NR DLL", nri);
                     break;
                 case NrMethodShortFuse:
-                    Tag(sfi ? "✓ DLSS Tool (ShortFuse)" : "✗ DLSS Tool (ShortFuse)", sfi);
-                    Tag(sfi ? "✓ DLSS DLLs" : "✗ DLSS DLLs", sfi);
-                    Tag(sfi ? "✓ Streamline" : "✗ Streamline", sfi);
-                    Tag(nri ? $"✓ NR DLL {nrv}" : "✗ NR DLL", nri);
+                    Tag(sfi    ? "✓ DLSS Tool (ShortFuse)"  : "✗ DLSS Tool (ShortFuse)", sfi);
+                    Tag(dlssi  ? $"✓ DLSS SR {dlssv}"       : "✗ DLSS SR",   dlssi);
+                    Tag(dlssdi ? $"✓ DLSS RR {dlssdv}"      : "✗ DLSS RR",   dlssdi);
+                    Tag(dlssgi ? $"✓ DLSS FG {dlssgv}"      : "✗ DLSS FG",   dlssgi);
+                    Tag(nri    ? $"✓ NR DLL {nrv}"          : "✗ NR DLL",    nri);
                     break;
                 case NrMethodFeeder:
-                    Tag(fei ? "✓ Feeder Addon" : "✗ Feeder Addon", fei);
-                    Tag(nri ? $"✓ NR DLL {nrv}" : "✗ NR DLL", nri);
+                    Tag(fei   ? "✓ Feeder Addon"            : "✗ Feeder Addon",  fei);
+                    Tag(d5i   ? "✓ DLSS5 Tool"              : "✗ DLSS5 Tool",    d5i);
+                    Tag(dlssi ? $"✓ DLSS SR {dlssv}"        : "✗ DLSS SR",       dlssi);
+                    Tag(nri   ? $"✓ NR DLL {nrv}"           : "✗ NR DLL",        nri);
+                    Tag(_shaderPackService.IsPackCached("DLSS5Feeder") ? "✓ Feed.fx"   : "✗ Feed.fx",   _shaderPackService.IsPackCached("DLSS5Feeder"));
+                    Tag(_shaderPackService.IsPackCached("LumeniteFX")  ? "✓ LumeniteFX" : "✗ LumeniteFX", _shaderPackService.IsPackCached("LumeniteFX"));
                     break;
                 default:
                     Tag("Not installed", false);

@@ -115,13 +115,14 @@ public class CompactViewBuilder
     /// <summary>
     /// Shows the appropriate page by toggling visibility of DetailPanel's children.
     /// Page 0 (Components): Show game name, info card, component table; hide overrides + nvidia + management
-    /// Page 1 (Game Overrides): Show overrides container only
+    /// Page 1 (Game Overrides + Neural Rendering): Show overrides and neural rendering containers
     /// Page 2 (Nvidia Profile + Management): Show nvidia profile and management containers
     /// </summary>
     private void ShowPage(int pageIndex)
     {
         var detailPanel = _window.DetailPanel;
         var overridesContainer = _window.OverridesContainer;
+        var neuralRenderingContainer = _window.NeuralRenderingContainer;
         var nvidiaProfileContainer = _window.NvidiaProfileContainer;
         var managementContainer = _window.ManagementContainer;
 
@@ -129,9 +130,9 @@ public class CompactViewBuilder
         {
             if (child is not UIElement element) continue;
 
-            if (element == overridesContainer)
+            if (element == overridesContainer || element == neuralRenderingContainer)
             {
-                // Page 1: Game Overrides only
+                // Page 1: Game Overrides + Neural Rendering
                 element.Visibility = pageIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
             }
             else if (element == nvidiaProfileContainer || element == managementContainer)

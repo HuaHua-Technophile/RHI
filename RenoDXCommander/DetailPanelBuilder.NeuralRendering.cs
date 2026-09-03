@@ -514,11 +514,13 @@ public partial class DetailPanelBuilder
                     {
                         case NrMethodDlss5Tool:
                             rdx5Svc.Uninstall(installPath);
+                            RestoreDlssDllsWithSentinel(card, _dlssStreamlineService);
                             break;
 
                         case NrMethodDlss5ToolBridge:
                             rdx5Svc.Uninstall(installPath);
                             RemoveAddonFile(installPath, BridgeDeployFile, "NeuralRendering.Remove.Bridge");
+                            RestoreDlssDllsWithSentinel(card, _dlssStreamlineService);
                             break;
 
                         case NrMethodShortFuse:
@@ -755,18 +757,66 @@ public partial class DetailPanelBuilder
         }).ConfigureAwait(false);
     }
 
-    /// <summary>Deploys src → dest with sentinel backup. If dest has no .original, backs up current first.</summary>
+    /// <summary>Deploys src → dest with sentinel backup. If dest exists, backs up the original. If dest doesn't exist, writes a 0-byte sentinel so uninstall knows to delete it entirely.</summary>
     private static void DeployWithSentinel(string src, string dest, string logCtx)
     {
         try
         {
             var sentinel = dest + ".original";
-            if (File.Exists(dest) && !File.Exists(sentinel))
-                File.Copy(dest, sentinel); // backup game original
+            if (File.Exists(dest))
+            {
+                if (!File.Exists(sentinel))
+                    File.Copy(dest, sentinel); // backup game original
+            }
+            else
+            {
+                if (!File.Exists(sentinel))
+                    File.WriteAllBytes(sentinel, Array.Empty<byte>()); // 0-byte sentinel — RHI placed this
+            }
             File.Copy(src, dest, overwrite: true);
             CrashReporter.Log($"[{logCtx}] Deployed to '{dest}'");
         }
         catch (Exception ex) { CrashReporter.Log($"[{logCtx}] Failed '{dest}' — {ex.Message}"); }
+    }
+
+    /// <summary>
+    /// Restores or deletes DLSS SR/RR/FG/NR DLLs deployed by UpgradeDlssDllsAsync,
+    /// using the sentinel pattern: 0-byte sentinel = delete entirely, non-zero = restore original.
+    /// </summary>
+    private static void RestoreWithSentinel(string dest, string logCtx)
+    {
+        try
+        {
+            var sentinel = dest + ".original";
+            if (!File.Exists(sentinel)) return; // not placed by RHI — leave untouched
+            var info = new FileInfo(sentinel);
+            if (info.Length == 0)
+            {
+                // RHI placed this from scratch — delete both
+                try { if (File.Exists(dest)) File.Delete(dest); } catch { }
+                try { File.Delete(sentinel); } catch { }
+                CrashReporter.Log($"[{logCtx}] Deleted '{dest}' (RHI-placed)");
+            }
+            else
+            {
+                // Restore game original
+                File.Copy(sentinel, dest, overwrite: true);
+                File.Delete(sentinel);
+                CrashReporter.Log($"[{logCtx}] Restored '{dest}' from backup");
+            }
+        }
+        catch (Exception ex) { CrashReporter.Log($"[{logCtx}] Restore failed '{dest}' — {ex.Message}"); }
+    }
+
+    /// <summary>Restores all DLSS DLLs (SR/RR/FG/NR) deployed by UpgradeDlssDllsAsync using their sentinels.</summary>
+    private static void RestoreDlssDllsWithSentinel(GameCardViewModel card, IDlssStreamlineService dlssSvc)
+    {
+        var installPath = card.InstallPath!;
+        var det = card.DlssDetection;
+        RestoreWithSentinel(det?.DlssPath   ?? Path.Combine(installPath, "nvngx_dlss.dll"),   "NeuralRendering.RestoreSR");
+        RestoreWithSentinel(det?.DlssdPath  ?? Path.Combine(installPath, "nvngx_dlssd.dll"),  "NeuralRendering.RestoreRR");
+        RestoreWithSentinel(det?.DlssgPath  ?? Path.Combine(installPath, "nvngx_dlssg.dll"),  "NeuralRendering.RestoreFG");
+        RestoreWithSentinel(det?.DlssnrPath ?? Path.Combine(installPath, "nvngx_dlssnr.dll"), "NeuralRendering.RestoreNR");
     }
 
     private async Task InstallBridgeAddonAsync(

@@ -261,9 +261,10 @@ public partial class DetailPanelBuilder
                     Tag(dlssi ? $"✓ DLSS SR {dlssv}"        : "✗ DLSS SR",       dlssi);
                     Tag(nri   ? $"✓ NR DLL {nrv}"           : "✗ NR DLL",        nri);
                     var shadersDir = Path.Combine(installPath, ShaderPackService.GameReShadeShaders, "Shaders");
-                    bool feedFxPresent = File.Exists(Path.Combine(shadersDir, "DLSS5_Feed.fx"));
+                    bool feedFxPresent = Directory.Exists(shadersDir) &&
+                        Directory.GetFiles(shadersDir, "DLSS5_Feed.fx", SearchOption.AllDirectories).Length > 0;
                     bool lumeniteFxPresent = Directory.Exists(shadersDir) &&
-                        Directory.GetFiles(shadersDir, "lumenite_*.fx", SearchOption.TopDirectoryOnly).Length > 0;
+                        Directory.GetFiles(shadersDir, "lumenite_*.fx", SearchOption.AllDirectories).Length > 0;
                     Tag(feedFxPresent    ? "✓ Feed.fx"    : "✗ Feed.fx",    feedFxPresent);
                     Tag(lumeniteFxPresent ? "✓ LumeniteFX" : "✗ LumeniteFX", lumeniteFxPresent);
                     break;
@@ -571,8 +572,9 @@ public partial class DetailPanelBuilder
                                     foreach (var f in Directory.GetFiles(texturesDir, "lumenite_*"))
                                         try { File.Delete(f); } catch { }
                                 }
-                                // Also remove DLSS5_Feed.fx and DLSS5Feeder subfolder files directly
-                                try { if (File.Exists(Path.Combine(shadersDir, "DLSS5_Feed.fx"))) File.Delete(Path.Combine(shadersDir, "DLSS5_Feed.fx")); } catch { }
+                                // Also remove DLSS5Feeder subfolder entirely
+                                try { if (Directory.Exists(Path.Combine(shadersDir, "DLSS5Feeder"))) Directory.Delete(Path.Combine(shadersDir, "DLSS5Feeder"), true); } catch { }
+                                try { if (Directory.Exists(Path.Combine(shadersDir, "LumeniteFX"))) Directory.Delete(Path.Combine(shadersDir, "LumeniteFX"), true); } catch { }
 
                                 // Update persisted selection — remove our packs, keep others
                                 var current = _gameNameService.PerGameShaderSelection.TryGetValue(gameKey, out var sel)
@@ -902,6 +904,8 @@ public partial class DetailPanelBuilder
             }).ConfigureAwait(false);
 
             // Add to PerGameShaderSelection so SyncGameFolder keeps them deployed
+
+            // Add to PerGameShaderSelection so SyncGameFolder keeps them deployed
             _window.DispatcherQueue?.TryEnqueue(() =>
             {
                 var gameKey = Models.GameKey.From(card.GameName, card.Source ?? "").ToKey();
@@ -924,6 +928,16 @@ public partial class DetailPanelBuilder
         {
             CrashReporter.Log($"[NeuralRendering] Shader deploy failed — {ex.Message}");
         }
+
+        // Rebuild panel one final time now that shaders are deployed — status will show ✓ Feed.fx / ✓ LumeniteFX
+        _window.DispatcherQueue?.TryEnqueue(() =>
+        {
+            var targetCard = _window.ViewModel.AllCards.FirstOrDefault(c =>
+                c.GameName.Equals(card.GameName, StringComparison.OrdinalIgnoreCase) &&
+                (string.IsNullOrEmpty(card.Source) || c.Source == card.Source));
+            if (targetCard != null)
+                BuildOverridesPanel(targetCard);
+        });
     }
 
     // ── Utility helpers ───────────────────────────────────────────────────────

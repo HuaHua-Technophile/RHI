@@ -901,6 +901,33 @@ public partial class DetailPanelBuilder
             {
                 _shaderPackService.DeployToGameFolder(installPath, new[] { "DLSS5Feeder", "LumeniteFX" }, null);
                 CrashReporter.Log($"[NeuralRendering] Deployed DLSS5Feeder + LumeniteFX shaders to '{installPath}'");
+
+                // Write DLSS5_MV_PROVIDER=3 (LumeniteFX Kernel) to reshade.ini [GENERAL] PreprocessorDefinitions
+                var iniPath = Path.Combine(installPath, "reshade.ini");
+                if (File.Exists(iniPath))
+                {
+                    try
+                    {
+                        var ini = AuxInstallService.ParseIni(File.ReadAllLines(iniPath));
+                        if (!ini.TryGetValue("GENERAL", out var general))
+                        {
+                            general = new AuxInstallService.OrderedDict();
+                            ini["GENERAL"] = general;
+                        }
+                        if (general.TryGetValue("PreprocessorDefinitions", out var existing) && !string.IsNullOrEmpty(existing))
+                        {
+                            if (!existing.Contains("DLSS5_MV_PROVIDER", StringComparison.OrdinalIgnoreCase))
+                                general["PreprocessorDefinitions"] = existing.TrimEnd(',') + ",DLSS5_MV_PROVIDER=3";
+                        }
+                        else
+                        {
+                            general["PreprocessorDefinitions"] = "DLSS5_MV_PROVIDER=3";
+                        }
+                        AuxInstallService.WriteIni(iniPath, ini);
+                        CrashReporter.Log($"[NeuralRendering] Set DLSS5_MV_PROVIDER=3 in reshade.ini for '{installPath}'");
+                    }
+                    catch (Exception iniEx) { CrashReporter.Log($"[NeuralRendering] reshade.ini update failed — {iniEx.Message}"); }
+                }
             }).ConfigureAwait(false);
 
             // Add to PerGameShaderSelection so SyncGameFolder keeps them deployed

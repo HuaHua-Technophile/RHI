@@ -539,7 +539,7 @@
   },
   "graphicsApiOverrides": {
     "Anno 117 - Pax Romana": "DX12",
-    "ACE COMBAT™7: SKIES UNKNOWN": "DirectX11",
+    "ACE COMBAT™7: SKIES UNKNOWN": "DX11",
     "Crimson Desert": "DX12",
     "Resident Evil 4": "DX12",
     "Resident Evil Requiem": "DX12",

@@ -1,5 +1,9 @@
 ## v2.5.8
 
+### Changes
+
+- Clicking the installed version number on a UE-Extended game now opens Marat's commit history for the UE-Extended addon.
+
 ### Bug Fixes
 
 - Fixed MFG Ada Unlock, DLSS5 Feeder, and DX11 Bridge not auto-updating — these addons use dynamic release filenames so RHI now resolves the download URL from the GitHub releases API rather than a hardcoded URL.

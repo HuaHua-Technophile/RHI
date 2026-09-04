@@ -1096,18 +1096,28 @@ public partial class DetailPanelBuilder
 
             // Add to PerGameShaderSelection so SyncGameFolder keeps them deployed
 
-            // Add ONLY DLSS5Feeder to PerGameShaderSelection — NOT LumeniteFX.
-            // lumenite_Kernel.fx is deployed directly above (outside the pack system) so
-            // SyncGameFolder on refresh only re-deploys DLSS5_Feed.fx, never the full LumeniteFX pack.
+            // Add DLSS5Feeder and LumeniteFX to PerGameShaderSelection, with global pack exclusions
+            // so SyncGameFolder only deploys lumenite_Kernel.fx and DLSS5_Feed.fx on refresh.
+            // SetExcludedFiles is global per-pack — safe here because LumeniteFX and DLSS5Feeder
+            // are only used by Feeder games and have no other use in the standard shader picker.
             _window.DispatcherQueue?.TryEnqueue(() =>
             {
+                // Persist pack-level exclusions so SyncGameFolder uses them on every refresh
+                var lumeniteAllFiles = _shaderPackService.GetPackShaderFiles(new[] { "LumeniteFX" })
+                    .Where(f => !f.Equals("lumenite_Kernel.fx", StringComparison.OrdinalIgnoreCase));
+                _shaderPackService.SetExcludedFiles("LumeniteFX", lumeniteAllFiles);
+
+                var feederAllFiles = _shaderPackService.GetPackShaderFiles(new[] { "DLSS5Feeder" })
+                    .Where(f => !f.Equals("DLSS5_Feed.fx", StringComparison.OrdinalIgnoreCase));
+                _shaderPackService.SetExcludedFiles("DLSS5Feeder", feederAllFiles);
+
                 var gameKey = Models.GameKey.From(card.GameName, card.Source ?? "").ToKey();
                 var current = _gameNameService.PerGameShaderSelection.TryGetValue(gameKey, out var sel)
                     ? sel.ToList() : new List<string>();
                 if (!current.Contains("DLSS5Feeder", StringComparer.OrdinalIgnoreCase))
                     current.Add("DLSS5Feeder");
-                // Explicitly remove LumeniteFX if it was added by a previous install
-                current.RemoveAll(p => p.Equals("LumeniteFX", StringComparison.OrdinalIgnoreCase));
+                if (!current.Contains("LumeniteFX", StringComparer.OrdinalIgnoreCase))
+                    current.Add("LumeniteFX");
                 _gameNameService.PerGameShaderSelection[gameKey] = current;
                 _window.ViewModel.SetPerGameShaderMode(card.GameName, "Select", card.Source ?? "");
                 card.ShaderModeOverride = "Select";

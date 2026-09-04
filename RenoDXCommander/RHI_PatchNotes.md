@@ -1,3 +1,12 @@
+## v2.5.9
+
+### Bug Fixes
+
+- Fixed DLSS5 Feeder refresh wiping lumenite shader files `SyncGameFolder` was deleting all managed shaders then only redeploying DLSS5_Feed.fx, losing lumenite_Kernel.fx. Fixed by persisting pack-level exclusions via SetExcludedFiles so refresh correctly deploys only the two needed files.
+- Fixed MFG Ada Unlock, DLSS5 Feeder, and DX11 Bridge missing from the per-game addon picker.
+
+---
+
 ## v2.5.8
 
 ### Changes

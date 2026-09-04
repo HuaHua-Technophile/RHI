@@ -429,9 +429,13 @@ public sealed partial class MainWindow
         var card = ViewModel.SelectedGame;
         if (card?.IsRdxInstalled == true)
         {
-            var url = !string.IsNullOrEmpty(card.NameUrl)
-                ? card.NameUrl
-                : "https://github.com/clshortfuse/renodx/wiki/Mods";
+            string url;
+            if (!string.IsNullOrEmpty(card.NameUrl))
+                url = card.NameUrl;
+            else if (card.UseUeExtended)
+                url = "https://github.com/marat569/renodx/commits/main/src/games/ue-extended";
+            else
+                url = "https://github.com/clshortfuse/renodx/wiki/Mods";
             await Windows.System.Launcher.LaunchUriAsync(new Uri(url));
         }
     }

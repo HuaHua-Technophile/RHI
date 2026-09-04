@@ -97,8 +97,15 @@ public partial class MainViewModel
         {
             try
             {
-                var games = _gameLibraryService.Load()?.Games ?? new();
-                _dlssStreamlineService.RecheckSkipList(games);
+                // Build a minimal DetectedGame list from the saved library for skip cache recheck
+                var savedLib = _gameLibraryService.Load();
+                if (savedLib?.Games != null)
+                {
+                    var games = savedLib.Games
+                        .Select(g => new Models.DetectedGame { Name = g.Name, InstallPath = g.InstallPath, Source = g.Source })
+                        .ToList();
+                    _dlssStreamlineService.RecheckSkipList(games);
+                }
             }
             catch (Exception ex) { _crashReporter.Log($"[MainViewModel.RefreshAsync] RecheckSkipList failed — {ex.Message}"); }
         });

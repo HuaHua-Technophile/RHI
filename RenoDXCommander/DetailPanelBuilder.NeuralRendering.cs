@@ -955,13 +955,15 @@ public partial class DetailPanelBuilder
             }).ConfigureAwait(false);
         }
 
-        // Deploy DLSS5Feeder shader (DLSS5_Feed.fx) + LumeniteFX (motion vectors) — already in RHI shader library
+        // Deploy DLSS5_Feed.fx + lumenite_Kernel.fx
+        // Only DLSS5Feeder is tracked in PerGameShaderSelection — lumenite_Kernel.fx is deployed
+        // directly (not via pack system) to avoid syncing the full LumeniteFX pack on refresh.
         _window.DispatcherQueue?.TryEnqueue(() => statusBtn.Content = "Deploying shaders...");
         try
         {
             await _shaderPackService.EnsurePacksAsync(new[] { "DLSS5Feeder", "LumeniteFX" }).ConfigureAwait(false);
 
-            // Build exclusion sets — deploy only lumenite_Kernel.fx and DLSS5_Feed.fx
+            // Build exclusion sets — deploy only lumenite_Kernel.fx from LumeniteFX, only DLSS5_Feed.fx from DLSS5Feeder
             var lumeniteExclude = _shaderPackService.GetPackShaderFiles(new[] { "LumeniteFX" })
                 .Where(f => !f.Equals("lumenite_Kernel.fx", StringComparison.OrdinalIgnoreCase))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -1094,7 +1096,9 @@ public partial class DetailPanelBuilder
 
             // Add to PerGameShaderSelection so SyncGameFolder keeps them deployed
 
-            // Add to PerGameShaderSelection so SyncGameFolder keeps them deployed
+            // Add ONLY DLSS5Feeder to PerGameShaderSelection — NOT LumeniteFX.
+            // lumenite_Kernel.fx is deployed directly above (outside the pack system) so
+            // SyncGameFolder on refresh only re-deploys DLSS5_Feed.fx, never the full LumeniteFX pack.
             _window.DispatcherQueue?.TryEnqueue(() =>
             {
                 var gameKey = Models.GameKey.From(card.GameName, card.Source ?? "").ToKey();
@@ -1102,13 +1106,10 @@ public partial class DetailPanelBuilder
                     ? sel.ToList() : new List<string>();
                 if (!current.Contains("DLSS5Feeder", StringComparer.OrdinalIgnoreCase))
                     current.Add("DLSS5Feeder");
-                if (!current.Contains("LumeniteFX", StringComparer.OrdinalIgnoreCase))
-                    current.Add("LumeniteFX");
+                // Explicitly remove LumeniteFX if it was added by a previous install
+                current.RemoveAll(p => p.Equals("LumeniteFX", StringComparison.OrdinalIgnoreCase));
                 _gameNameService.PerGameShaderSelection[gameKey] = current;
-                // Set shader mode to Select — must happen AFTER selection is written
-                // so SaveNameMappings() inside SetPerGameShaderMode picks up the selection
                 _window.ViewModel.SetPerGameShaderMode(card.GameName, "Select", card.Source ?? "");
-                // Also update the card directly so the next SyncGameFolder pass uses it
                 card.ShaderModeOverride = "Select";
                 _window.ViewModel.SaveSettingsPublic();
             });

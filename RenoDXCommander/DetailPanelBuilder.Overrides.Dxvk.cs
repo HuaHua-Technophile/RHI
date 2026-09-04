@@ -1,4 +1,4 @@
-﻿// DetailPanelBuilder.Overrides.Dxvk.cs — DXVK section + Management section.
+// DetailPanelBuilder.Overrides.Dxvk.cs — DXVK section + Management section.
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -255,6 +255,53 @@ public partial class DetailPanelBuilder
         // ── Management section (single row: 4 buttons side by side with separators) ──
         _window.ManagementPanel.Children.Clear();
 
+        // Collapsible header
+        const string mgmtSectionKey = "Management";
+        var mgmtSettings   = _window.ViewModel.Settings;
+        bool mgmtCollapsed = mgmtSettings.CollapsedDetailSections.Contains(mgmtSectionKey);
+
+        var mgmtArrow = new TextBlock
+        {
+            Text      = mgmtCollapsed ? "▶" : "▼",
+            FontSize  = 10,
+            Foreground = UIFactory.Brush(ResourceKeys.TextTertiaryBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin    = new Thickness(0, 0, 6, 0),
+        };
+        var mgmtTitle = new TextBlock
+        {
+            Text       = "Management",
+            FontSize   = 13,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var mgmtHeaderRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0 };
+        mgmtHeaderRow.Children.Add(mgmtArrow);
+        mgmtHeaderRow.Children.Add(mgmtTitle);
+        _window.ManagementPanel.Children.Add(mgmtHeaderRow);
+
+        // Body wrapper
+        var mgmtBody = new StackPanel { Spacing = 6, Visibility = mgmtCollapsed ? Visibility.Collapsed : Visibility.Visible };
+        _window.ManagementPanel.Children.Add(mgmtBody);
+
+        mgmtHeaderRow.PointerEntered += (s, e) => mgmtTitle.Foreground = UIFactory.Brush(ResourceKeys.AccentTealBrush);
+        mgmtHeaderRow.PointerExited  += (s, e) => mgmtTitle.Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush);
+        var mgmtHandCursor  = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
+        var mgmtArrowCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Arrow);
+        var mgmtCursorProp  = typeof(UIElement).GetProperty("ProtectedCursor", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        mgmtHeaderRow.PointerEntered += (s, e) => mgmtCursorProp?.SetValue(mgmtHeaderRow, mgmtHandCursor);
+        mgmtHeaderRow.PointerExited  += (s, e) => mgmtCursorProp?.SetValue(mgmtHeaderRow, mgmtArrowCursor);
+        mgmtHeaderRow.PointerPressed += (s, e) =>
+        {
+            bool nowCollapsed = mgmtBody.Visibility == Visibility.Visible;
+            mgmtBody.Visibility = nowCollapsed ? Visibility.Collapsed : Visibility.Visible;
+            mgmtArrow.Text = nowCollapsed ? "▶" : "▼";
+            if (nowCollapsed) mgmtSettings.CollapsedDetailSections.Add(mgmtSectionKey);
+            else              mgmtSettings.CollapsedDetailSections.Remove(mgmtSectionKey);
+            _window.ViewModel.SaveSettingsPublic();
+        };
+
         var mgmtRow = new Grid { ColumnSpacing = 0 };
         mgmtRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         mgmtRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -356,7 +403,7 @@ public partial class DetailPanelBuilder
         ToolTipService.SetToolTip(reportBtn, "Copy a diagnostic report for this game to the clipboard. Useful for Discord or GitHub support.");
         mgmtRow.Children.Add(reportBtn);
 
-        _window.ManagementPanel.Children.Add(mgmtRow);
+        mgmtBody.Children.Add(mgmtRow);
         return dxvkToggleResult;
     }
 }

@@ -1,4 +1,4 @@
-﻿// DetailPanelBuilder.Overrides.DriverSettings.cs — Driver Profile Settings (VSync, Latency, Smooth Motion, Power/CPU, ReBAR).
+// DetailPanelBuilder.Overrides.DriverSettings.cs — Driver Profile Settings (VSync, Latency, Smooth Motion, Power/CPU, ReBAR).
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,6 +10,9 @@ namespace RenoDXCommander;
 
 public partial class DetailPanelBuilder
 {
+    // Set by BuildNvidiaProfileSection so BuildDriverProfileSection appends to the body, not the panel root
+    private StackPanel? _nvBodyPanel;
+
     private void BuildDriverProfileSection(GameCardViewModel card, string capturedName)
     {
 
@@ -21,7 +24,7 @@ public partial class DetailPanelBuilder
         {
             bool isAdmin = VulkanLayerService.IsRunningAsAdmin();
 
-            _window.NvidiaProfilePanel.Children.Add(UIFactory.MakeSeparator());
+            (_nvBodyPanel ?? _window.NvidiaProfilePanel).Children.Add(UIFactory.MakeSeparator());
 
             var nvidiaGrid = new Grid { ColumnSpacing = 12, Opacity = isAdmin ? 1.0 : 0.4, IsHitTestVisible = isAdmin };
             // 4 columns with dividers between: col0 | div1 | col2 | div3 | col4 | div5 | col6
@@ -543,12 +546,12 @@ public partial class DetailPanelBuilder
             nvidiaGrid.Children.Add(rebarCol);
             nvidiaGrid.Children.Add(MakeDlssDivider(3));
 
-            _window.NvidiaProfilePanel.Children.Add(nvidiaGrid);
+            (_nvBodyPanel ?? _window.NvidiaProfilePanel).Children.Add(nvidiaGrid);
         }
 
         // Admin notice at the bottom of the Nvidia Profile section
         bool isElevated = VulkanLayerService.IsRunningAsAdmin();
-        _window.NvidiaProfilePanel.Children.Add(new TextBlock
+        (_nvBodyPanel ?? _window.NvidiaProfilePanel).Children.Add(new TextBlock
         {
             Text = isElevated
                 ? "✓ Running as admin — all driver profile settings are writable."

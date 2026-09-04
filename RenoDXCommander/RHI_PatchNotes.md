@@ -1,8 +1,22 @@
 ## v2.5.9
 
+## v2.6.0
+
+### New
+
+- Detail view sections (Components, Game Overrides, Neural Rendering, Nvidia Profile Overrides, Management) are now collapsible. Click the section heading to toggle it open or closed. Collapsed state persists across restarts.
+
+### Manifest Updates
+
+- Baldur's Gate 3 forced to 64-bit detection.
+
+---
+
+## v2.5.9
+
 ### Bug Fixes
 
-- Fixed DLSS5 Feeder refresh wiping lumenite shader files `SyncGameFolder` was deleting all managed shaders then only redeploying DLSS5_Feed.fx, losing lumenite_Kernel.fx. Fixed by persisting pack-level exclusions via SetExcludedFiles so refresh correctly deploys only the two needed files.
+- Fixed DLSS5 Feeder refresh wiping lumenite shader files — `SyncGameFolder` was deleting all managed shaders then only redeploying DLSS5_Feed.fx, losing lumenite_Kernel.fx. Fixed by persisting pack-level exclusions via SetExcludedFiles so refresh correctly deploys only the two needed files.
 - Fixed MFG Ada Unlock, DLSS5 Feeder, and DX11 Bridge missing from the per-game addon picker.
 
 ---

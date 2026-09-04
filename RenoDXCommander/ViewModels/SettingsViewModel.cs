@@ -90,6 +90,14 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>Per-display DVC values. Key = display index (string), Value = 0-100.</summary>
     public Dictionary<string, int> DigitalVibranceSettings { get; set; } = new();
 
+    // ── Detail panel section collapse state ───────────────────────────────────
+    /// <summary>
+    /// Section keys that are currently collapsed in the detail panel.
+    /// Keys: "Components", "GameOverrides", "NeuralRendering", "NvidiaProfile", "Management"
+    /// Absent = expanded (default).
+    /// </summary>
+    public HashSet<string> CollapsedDetailSections { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     // ── DLSS/Streamline Defaults ──────────────────────────────────────────────
     [ObservableProperty] private string _defaultDlssVersion = "";
     [ObservableProperty] private string _defaultDlssdVersion = "";
@@ -339,6 +347,17 @@ public partial class SettingsViewModel : ObservableObject
             try { DigitalVibranceSettings = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(dvcVal) ?? new(); }
             catch { DigitalVibranceSettings = new(); }
         }
+
+        // Detail panel section collapse state
+        if (s.TryGetValue("CollapsedDetailSections", out var cdsVal))
+        {
+            try
+            {
+                var list = System.Text.Json.JsonSerializer.Deserialize<List<string>>(cdsVal);
+                CollapsedDetailSections = new HashSet<string>(list ?? new(), StringComparer.OrdinalIgnoreCase);
+            }
+            catch { CollapsedDetailSections = new(StringComparer.OrdinalIgnoreCase); }
+        }
     }
 
     /// <summary>
@@ -433,6 +452,12 @@ public partial class SettingsViewModel : ObservableObject
         // Digital Vibrance per-display settings
         if (DigitalVibranceSettings.Count > 0)
             s["DigitalVibrance"] = System.Text.Json.JsonSerializer.Serialize(DigitalVibranceSettings);
+
+        // Detail panel section collapse state — only save when any section is collapsed
+        if (CollapsedDetailSections.Count > 0)
+            s["CollapsedDetailSections"] = System.Text.Json.JsonSerializer.Serialize(CollapsedDetailSections.ToList());
+        else
+            s.Remove("CollapsedDetailSections");
     }
 
     public void LoadThemeAndDensity()

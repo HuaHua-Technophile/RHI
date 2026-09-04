@@ -306,6 +306,32 @@ public partial class DetailPanelBuilder
         _window.DetailLumaToggle.Visibility = Visibility.Collapsed;
         _window.DetailLumaInfoText.Visibility = Visibility.Collapsed;
 
+        // ── Wire Components section collapse ──────────────────────────────────
+        {
+            const string sectionKey = "Components";
+            var settings    = _window.ViewModel.Settings;
+            bool collapsed  = settings.CollapsedDetailSections.Contains(sectionKey);
+
+            _window.DetailComponentsArrow.Text = collapsed ? "▶" : "▼";
+            _window.DetailComponentsBody.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+            _window.DetailComponentsTitle.Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush);
+
+            // Re-subscribe each time panel is populated (card changes)
+            _window.DetailComponentsHeader.PointerPressed -= ComponentsHeader_PointerPressed;
+            _window.DetailComponentsHeader.PointerPressed += ComponentsHeader_PointerPressed;
+            _window.DetailComponentsHeader.PointerEntered -= ComponentsHeader_PointerEntered;
+            _window.DetailComponentsHeader.PointerEntered += ComponentsHeader_PointerEntered;
+            _window.DetailComponentsHeader.PointerExited  -= ComponentsHeader_PointerExited;
+            _window.DetailComponentsHeader.PointerExited  += ComponentsHeader_PointerExited;
+
+            var handCursor  = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
+            var arrowCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Arrow);
+            var cursorProp  = typeof(UIElement).GetProperty("ProtectedCursor",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            _window.DetailComponentsHeader.PointerEntered += (s, e) => cursorProp?.SetValue(_window.DetailComponentsHeader, handCursor);
+            _window.DetailComponentsHeader.PointerExited  += (s, e) => cursorProp?.SetValue(_window.DetailComponentsHeader, arrowCursor);
+        }
+
         // Populate component rows
         UpdateDetailComponentRows(card);
     }
@@ -465,5 +491,118 @@ public partial class DetailPanelBuilder
         window.DetailGraphicsApiBadgePanel.Visibility =
             window.DetailGraphicsApiBadgePanel.Children.Count > 0
             ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // ── Components section header event handlers (wired per-card in PopulateDetailPanel) ──
+
+    private void ComponentsHeader_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        const string sectionKey = "Components";
+        var settings   = _window.ViewModel.Settings;
+        bool collapsed = _window.DetailComponentsBody.Visibility == Visibility.Visible;
+        _window.DetailComponentsBody.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
+        _window.DetailComponentsArrow.Text      = collapsed ? "▶" : "▼";
+
+        if (collapsed) settings.CollapsedDetailSections.Add(sectionKey);
+        else           settings.CollapsedDetailSections.Remove(sectionKey);
+
+        _window.ViewModel.SaveSettingsPublic();
+    }
+
+    private void ComponentsHeader_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        _window.DetailComponentsTitle.Foreground = UIFactory.Brush(ResourceKeys.AccentTealBrush);
+        var handCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
+        typeof(UIElement).GetProperty("ProtectedCursor",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            ?.SetValue(_window.DetailComponentsHeader, handCursor);
+    }
+
+    private void ComponentsHeader_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        _window.DetailComponentsTitle.Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush);
+        var arrowCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Arrow);
+        typeof(UIElement).GetProperty("ProtectedCursor",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            ?.SetValue(_window.DetailComponentsHeader, arrowCursor);
+    }
+
+    // ── Section-collapse helper ──────────────────────────────────────────────
+
+    /// <summary>
+    /// Builds a collapsible section: a clickable header row (arrow + title) and a body
+    /// StackPanel whose visibility is toggled on click.
+    /// The collapsed state is persisted in SettingsViewModel.CollapsedDetailSections.
+    /// Returns a StackPanel containing [header, body] that should be added to the parent panel.
+    /// The caller should add all section body content into the returned <paramref name="body"/> panel.
+    /// </summary>
+    internal (StackPanel wrapper, StackPanel body) MakeSectionHeader(string title, string sectionKey)
+    {
+        var settings = _window.ViewModel.Settings;
+        bool isCollapsed = settings.CollapsedDetailSections.Contains(sectionKey);
+
+        var arrowText = new TextBlock
+        {
+            Text        = isCollapsed ? "▶" : "▼",
+            FontSize    = 10,
+            Foreground  = UIFactory.Brush(ResourceKeys.TextTertiaryBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin      = new Thickness(0, 0, 6, 0),
+        };
+
+        var titleText = new TextBlock
+        {
+            Text       = title,
+            FontSize   = 13,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+            Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        var headerRow = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing     = 0,
+        };
+        headerRow.Children.Add(arrowText);
+        headerRow.Children.Add(titleText);
+
+        // Make the header row behave like a button
+        headerRow.PointerEntered += (s, e) => titleText.Foreground = UIFactory.Brush(ResourceKeys.AccentTealBrush);
+        headerRow.PointerExited  += (s, e) => titleText.Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush);
+
+        // Hand cursor on hover
+        var handCursor  = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
+        var arrowCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Arrow);
+        var cursorProp  = typeof(UIElement).GetProperty("ProtectedCursor",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        headerRow.PointerEntered += (s, e) => cursorProp?.SetValue(headerRow, handCursor);
+        headerRow.PointerExited  += (s, e) => cursorProp?.SetValue(headerRow, arrowCursor);
+
+        var body = new StackPanel
+        {
+            Spacing    = 10,
+            Visibility = isCollapsed ? Visibility.Collapsed : Visibility.Visible,
+        };
+
+        // Toggle on click
+        headerRow.PointerPressed += (s, e) =>
+        {
+            bool nowCollapsed = body.Visibility == Visibility.Visible;
+            body.Visibility = nowCollapsed ? Visibility.Collapsed : Visibility.Visible;
+            arrowText.Text  = nowCollapsed ? "▶" : "▼";
+
+            if (nowCollapsed)
+                settings.CollapsedDetailSections.Add(sectionKey);
+            else
+                settings.CollapsedDetailSections.Remove(sectionKey);
+
+            _window.ViewModel.SaveSettingsPublic();
+        };
+
+        var wrapper = new StackPanel { Spacing = 8 };
+        wrapper.Children.Add(headerRow);
+        wrapper.Children.Add(body);
+        return (wrapper, body);
     }
 }

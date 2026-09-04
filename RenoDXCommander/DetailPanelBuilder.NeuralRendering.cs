@@ -92,13 +92,51 @@ public partial class DetailPanelBuilder
         };
 
         // ── Header ────────────────────────────────────────────────────────────
-        _window.NeuralRenderingPanel.Children.Add(new TextBlock
+        const string nrSectionKey = "NeuralRendering";
+        var nrSettings   = _window.ViewModel.Settings;
+        bool nrCollapsed = nrSettings.CollapsedDetailSections.Contains(nrSectionKey);
+
+        var nrArrow = new TextBlock
         {
-            Text = "Neural Rendering",
-            FontSize = 13,
+            Text      = nrCollapsed ? "▶" : "▼",
+            FontSize  = 10,
+            Foreground = UIFactory.Brush(ResourceKeys.TextTertiaryBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin    = new Thickness(0, 0, 6, 0),
+        };
+        var nrTitle = new TextBlock
+        {
+            Text       = "Neural Rendering",
+            FontSize   = 13,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush),
-        });
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var nrHeaderRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0 };
+        nrHeaderRow.Children.Add(nrArrow);
+        nrHeaderRow.Children.Add(nrTitle);
+        _window.NeuralRenderingPanel.Children.Add(nrHeaderRow);
+
+        // Body wrapper — all section content goes into this
+        var nrBody = new StackPanel { Spacing = 6, Visibility = nrCollapsed ? Visibility.Collapsed : Visibility.Visible };
+        _window.NeuralRenderingPanel.Children.Add(nrBody);
+
+        nrHeaderRow.PointerEntered += (s, e) => nrTitle.Foreground = UIFactory.Brush(ResourceKeys.AccentTealBrush);
+        nrHeaderRow.PointerExited  += (s, e) => nrTitle.Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush);
+        var nrHandCursor  = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
+        var nrArrowCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Arrow);
+        var nrCursorProp  = typeof(UIElement).GetProperty("ProtectedCursor", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        nrHeaderRow.PointerEntered += (s, e) => nrCursorProp?.SetValue(nrHeaderRow, nrHandCursor);
+        nrHeaderRow.PointerExited  += (s, e) => nrCursorProp?.SetValue(nrHeaderRow, nrArrowCursor);
+        nrHeaderRow.PointerPressed += (s, e) =>
+        {
+            bool nowCollapsed = nrBody.Visibility == Visibility.Visible;
+            nrBody.Visibility = nowCollapsed ? Visibility.Collapsed : Visibility.Visible;
+            nrArrow.Text = nowCollapsed ? "▶" : "▼";
+            if (nowCollapsed) nrSettings.CollapsedDetailSections.Add(nrSectionKey);
+            else              nrSettings.CollapsedDetailSections.Remove(nrSectionKey);
+            _window.ViewModel.SaveSettingsPublic();
+        };
 
         // ── Row 1: Method combo + NR version combo ────────────────────────────
         var row1 = new Grid { ColumnSpacing = 8 };
@@ -153,11 +191,11 @@ public partial class DetailPanelBuilder
         Grid.SetColumn(nrVersionStack, 1);
         row1.Children.Add(nrVersionStack);
 
-        _window.NeuralRenderingPanel.Children.Add(row1);
+        nrBody.Children.Add(row1);
 
         // ── Status line ───────────────────────────────────────────────────────
         var statusPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 4, 0, 0) };
-        _window.NeuralRenderingPanel.Children.Add(statusPanel);
+        nrBody.Children.Add(statusPanel);
 
         void RefreshStatus()
         {
@@ -301,7 +339,7 @@ public partial class DetailPanelBuilder
         descStack.Children.Add(descText);
         descStack.Children.Add(descLink);
         descBorder.Child = descStack;
-        _window.NeuralRenderingPanel.Children.Add(descBorder);
+        nrBody.Children.Add(descBorder);
 
         void UpdateDescription(string methodKey)
         {
@@ -643,7 +681,7 @@ public partial class DetailPanelBuilder
         Grid.SetColumn(removeBtn,  1);
         btnRow.Children.Add(installBtn);
         btnRow.Children.Add(removeBtn);
-        _window.NeuralRenderingPanel.Children.Add(btnRow);
+        nrBody.Children.Add(btnRow);
 
         // ── How to use links ──────────────────────────────────────────────────
         var linksRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 4, 0, 0) };
@@ -659,7 +697,7 @@ public partial class DetailPanelBuilder
         linksRow.Children.Add(MakeLink("DX11 Bridge →", "https://github.com/NIGos/dlss5-bridge"));
         linksRow.Children.Add(MakeLink("ShortFuse →",   "https://discord.com/channels/1408098019194310818/1543975158937821315"));
         linksRow.Children.Add(MakeLink("Feeder →",      "https://github.com/jlrouzies-fr/DLSS5-Feeder"));
-        _window.NeuralRenderingPanel.Children.Add(linksRow);
+        nrBody.Children.Add(linksRow);
     }
 
     // ── Install helpers ───────────────────────────────────────────────────────

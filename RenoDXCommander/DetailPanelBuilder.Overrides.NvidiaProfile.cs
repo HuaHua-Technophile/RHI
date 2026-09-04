@@ -1,4 +1,4 @@
-﻿// DetailPanelBuilder.Overrides.NvidiaProfile.cs — Nvidia Profile Overrides header + DLSS/Streamline section.
+// DetailPanelBuilder.Overrides.NvidiaProfile.cs — Nvidia Profile Overrides header + DLSS/Streamline section.
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -17,17 +17,60 @@ public partial class DetailPanelBuilder
         // DLSS / Streamline / ReBAR + future additions
         // ══════════════════════════════════════════════════════════════════════
         _window.NvidiaProfilePanel.Children.Clear();
+
+        // ── Collapsible header ────────────────────────────────────────────────
+        const string nvSectionKey = "NvidiaProfile";
+        var nvSettings   = _window.ViewModel.Settings;
+        bool nvCollapsed = nvSettings.CollapsedDetailSections.Contains(nvSectionKey);
+
         var nvidiaHeaderText = "Nvidia Profile Overrides";
         var driverVer = _dlssPresetService.DriverVersionString;
         if (!string.IsNullOrEmpty(driverVer))
             nvidiaHeaderText += $" — Driver {driverVer}";
-        _window.NvidiaProfilePanel.Children.Add(new TextBlock
+
+        var nvArrow = new TextBlock
         {
-            Text = nvidiaHeaderText,
-            FontSize = 13,
+            Text      = nvCollapsed ? "▶" : "▼",
+            FontSize  = 10,
+            Foreground = UIFactory.Brush(ResourceKeys.TextTertiaryBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin    = new Thickness(0, 0, 6, 0),
+        };
+        var nvTitle = new TextBlock
+        {
+            Text       = nvidiaHeaderText,
+            FontSize   = 13,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush),
-        });
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var nvHeaderRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0 };
+        nvHeaderRow.Children.Add(nvArrow);
+        nvHeaderRow.Children.Add(nvTitle);
+        _window.NvidiaProfilePanel.Children.Add(nvHeaderRow);
+
+        var nvBody = new StackPanel { Spacing = 6, Visibility = nvCollapsed ? Visibility.Collapsed : Visibility.Visible };
+        _window.NvidiaProfilePanel.Children.Add(nvBody);
+
+        nvHeaderRow.PointerEntered += (s, e) => nvTitle.Foreground = UIFactory.Brush(ResourceKeys.AccentTealBrush);
+        nvHeaderRow.PointerExited  += (s, e) => nvTitle.Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush);
+        var nvHandCursor  = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
+        var nvArrowCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Arrow);
+        var nvCursorProp  = typeof(UIElement).GetProperty("ProtectedCursor", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        nvHeaderRow.PointerEntered += (s, e) => nvCursorProp?.SetValue(nvHeaderRow, nvHandCursor);
+        nvHeaderRow.PointerExited  += (s, e) => nvCursorProp?.SetValue(nvHeaderRow, nvArrowCursor);
+        nvHeaderRow.PointerPressed += (s, e) =>
+        {
+            bool nowCollapsed = nvBody.Visibility == Visibility.Visible;
+            nvBody.Visibility = nowCollapsed ? Visibility.Collapsed : Visibility.Visible;
+            nvArrow.Text = nowCollapsed ? "▶" : "▼";
+            if (nowCollapsed) nvSettings.CollapsedDetailSections.Add(nvSectionKey);
+            else              nvSettings.CollapsedDetailSections.Remove(nvSectionKey);
+            _window.ViewModel.SaveSettingsPublic();
+        };
+
+        // Store the body panel so BuildDriverProfileSection can append to it
+        _nvBodyPanel = nvBody;
 
         if (card.HasAnyDlssStreamline)
         {
@@ -618,7 +661,7 @@ public partial class DetailPanelBuilder
             Grid.SetColumn(slCol, slColumn);
             dlssRowGrid.Children.Add(slCol);
 
-            _window.NvidiaProfilePanel.Children.Add(dlssRowGrid);
+            nvBody.Children.Add(dlssRowGrid);
         }
 
         BuildDriverProfileSection(card, capturedName);

@@ -38,18 +38,52 @@ public partial class DetailPanelBuilder
     public void BuildOverridesPanel(GameCardViewModel card)
     {
         _window.OverridesPanel.Children.Clear();
+        _window.OverridesHeaderRow.Children.Clear();
 
         var gameName = card.GameName;
         bool isLumaMode = _window.ViewModel.IsLumaEnabled(gameName, card.Source ?? "");
 
-        // ── Title ────────────────────────────────────────────────────────────────
-        _window.OverridesPanel.Children.Add(new TextBlock
+        // ── Collapsible header ────────────────────────────────────────────────
+        const string overridesSectionKey = "GameOverrides";
+        var ovSettings  = _window.ViewModel.Settings;
+        bool ovCollapsed = ovSettings.CollapsedDetailSections.Contains(overridesSectionKey);
+
+        var ovArrow = new TextBlock
         {
-            Text = "Game Overrides",
-            FontSize = 13,
+            Text      = ovCollapsed ? "▶" : "▼",
+            FontSize  = 10,
+            Foreground = UIFactory.Brush(ResourceKeys.TextTertiaryBrush),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin    = new Thickness(0, 0, 6, 0),
+        };
+        var ovTitle = new TextBlock
+        {
+            Text       = "Game Overrides",
+            FontSize   = 13,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush),
-        });
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        _window.OverridesHeaderRow.Children.Add(ovArrow);
+        _window.OverridesHeaderRow.Children.Add(ovTitle);
+        _window.OverridesPanel.Visibility = ovCollapsed ? Visibility.Collapsed : Visibility.Visible;
+
+        _window.OverridesHeaderRow.PointerEntered += (s, e) => ovTitle.Foreground = UIFactory.Brush(ResourceKeys.AccentTealBrush);
+        _window.OverridesHeaderRow.PointerExited  += (s, e) => ovTitle.Foreground = UIFactory.Brush(ResourceKeys.TextPrimaryBrush);
+        var ovHandCursor  = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Hand);
+        var ovArrowCursor = Microsoft.UI.Input.InputSystemCursor.Create(Microsoft.UI.Input.InputSystemCursorShape.Arrow);
+        var ovCursorProp  = typeof(UIElement).GetProperty("ProtectedCursor", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        _window.OverridesHeaderRow.PointerEntered += (s, e) => ovCursorProp?.SetValue(_window.OverridesHeaderRow, ovHandCursor);
+        _window.OverridesHeaderRow.PointerExited  += (s, e) => ovCursorProp?.SetValue(_window.OverridesHeaderRow, ovArrowCursor);
+        _window.OverridesHeaderRow.PointerPressed += (s, e) =>
+        {
+            bool nowCollapsed = _window.OverridesPanel.Visibility == Visibility.Visible;
+            _window.OverridesPanel.Visibility = nowCollapsed ? Visibility.Collapsed : Visibility.Visible;
+            ovArrow.Text = nowCollapsed ? "▶" : "▼";
+            if (nowCollapsed) ovSettings.CollapsedDetailSections.Add(overridesSectionKey);
+            else              ovSettings.CollapsedDetailSections.Remove(overridesSectionKey);
+            _window.ViewModel.SaveSettingsPublic();
+        };
 
         // ── Game name + Wiki name ────────────────────────────────────────────────
         var detectedBox = new TextBox

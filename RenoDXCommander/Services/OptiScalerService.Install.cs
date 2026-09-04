@@ -328,9 +328,7 @@ public partial class OptiScalerService
             _auxInstaller.SaveAuxRecord(record);
             CrashReporter.Log($"[OptiScalerService.InstallAsync] Saved tracking record for {card.GameName}");
 
-            // ── 7. Deploy OptiPatcher for AMD/Intel GPUs ─────────────────────
-            if (gpuType.Equals("AMD", StringComparison.OrdinalIgnoreCase)
-                || gpuType.Equals("Intel", StringComparison.OrdinalIgnoreCase))
+            // ── 7. Deploy OptiPatcher (all GPU types) ────────────────────────
             {
                 try
                 {

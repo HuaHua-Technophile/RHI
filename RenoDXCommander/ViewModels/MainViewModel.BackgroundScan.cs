@@ -86,7 +86,8 @@ public partial class MainViewModel
             var addonPackTask = Task.Run(async () => {
                 try {
                     await _addonPackService.EnsureLatestAsync();
-                    await _addonPackService.CheckAndUpdateAllAsync();
+                    // Note: CheckAndUpdateAllAsync is called after ApplyManifestOverrides below,
+                    // so manifest-driven entries (releaseApiUrl etc.) are available for version resolution.
                 }
                 catch (Exception ex) { _crashReporter.Log($"[RunBackgroundScanAndMergeAsync] Addon pack task failed — {ex.Message}"); }
             });
@@ -140,6 +141,10 @@ public partial class MainViewModel
             (_shaderPackService as ShaderPackService)?.ApplyManifestOverrides(_manifest);
             (_addonPackService as AddonPackService)?.ApplyManifestOverrides(_manifest);
             DlssPresetService.ApplyManifestPresets(_manifest);
+
+            // Run addon update check AFTER manifest overrides are applied so releaseApiUrl entries are available
+            try { await _addonPackService.CheckAndUpdateAllAsync(); }
+            catch (Exception ex) { _crashReporter.Log($"[RunBackgroundScanAndMergeAsync] Addon update check failed — {ex.Message}"); }
             _dlssPresetService.ApplyManifestProfileConfig(_manifest);
             FeatureFlags.ApplyManifest(_manifest?.FeatureFlags);
             _dofFixService.SetSkipGames(_manifest?.DofFixSkipGames);

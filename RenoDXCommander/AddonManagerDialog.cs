@@ -131,7 +131,8 @@ public static class AddonManagerDialog
     {
         if (!string.IsNullOrEmpty(entry.DownloadUrl) ||
             !string.IsNullOrEmpty(entry.DownloadUrl32) ||
-            !string.IsNullOrEmpty(entry.DownloadUrl64))
+            !string.IsNullOrEmpty(entry.DownloadUrl64) ||
+            !string.IsNullOrEmpty(entry.ReleaseApiUrl))
             return "download";
 
         // renodx-dlss5 and renodx-dlss-sf are managed by Renodx5AddonService — treat as downloadable

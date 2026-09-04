@@ -1053,6 +1053,9 @@ public class AddonPackService : IAddonPackService
             var req = new HttpRequestMessage(HttpMethod.Get, releaseApiUrl);
             req.Headers.Add("User-Agent", "RHI");
             req.Headers.Add("Accept", "application/vnd.github+json");
+            var token = DevUnlockService.GitHubApiToken;
+            if (!string.IsNullOrEmpty(token))
+                req.Headers.Add("Authorization", $"Bearer {token}");
             var resp = await _http.SendAsync(req).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode)
             {

@@ -20,4 +20,35 @@ public static class DevUnlockService
     /// Result is cached after the first call.
     /// </summary>
     public static bool IsUnlocked => _isUnlocked ??= File.Exists(UnlockFilePath);
+
+    private static string? _gitHubApiToken;
+    private static bool _gitHubApiTokenRead;
+
+    /// <summary>
+    /// Returns a GitHub API token read from unlock.txt via a "github_api=TOKEN" line.
+    /// Only available when unlock.txt exists. Returns null if not set.
+    /// </summary>
+    public static string? GitHubApiToken
+    {
+        get
+        {
+            if (_gitHubApiTokenRead) return _gitHubApiToken;
+            _gitHubApiTokenRead = true;
+            if (!IsUnlocked) return null;
+            try
+            {
+                foreach (var line in File.ReadLines(UnlockFilePath))
+                {
+                    var trimmed = line.Trim();
+                    if (trimmed.StartsWith("github_api=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _gitHubApiToken = trimmed.Substring("github_api=".Length).Trim();
+                        return _gitHubApiToken;
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+    }
 }

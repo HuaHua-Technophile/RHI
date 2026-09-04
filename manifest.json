@@ -1350,7 +1350,7 @@
     "dlss5-dx11-bridge": {
       "packageName": "DLSS5 DX11 Bridge",
       "description": "Enables DLSS 5 Neural Rendering in DX11 and Vulkan games that already have native DLSS. Mirrors the game\u2019s DLSS onto a private DX12 session for the NR addon to hook.",
-      "downloadUrl64": "https://github.com/NIGos/dlss5-bridge/releases/latest/download/dlss5-bridge.addon64",
+      "releaseApiUrl": "https://api.github.com/repos/NIGos/dlss5-bridge/releases/latest",
       "repositoryUrl": "https://github.com/NIGos/dlss5-bridge"
     },
     "dlss5-feed": {
